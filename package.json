@@ -1,0 +1,30 @@
+{
+  "name": "thesis-topic-management",
+  "version": "1.0.0",
+  "description": "Website for managing thesis's topic and research topic",
+  "main": "index.js",
+  "scripts": {
+    "start":"nodemon --inspect src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yenle259/thesis-topic-management.git"
+  },
+  "keywords": [
+    "thesis",
+    "manage"
+  ],
+  "author": "yenle",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yenle259/thesis-topic-management/issues"
+  },
+  "homepage": "https://github.com/yenle259/thesis-topic-management#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
