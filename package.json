@@ -4,6 +4,7 @@
   "description": "Website for managing thesis's topic and research topic",
   "main": "index.js",
   "scripts": {
+    "beauty": "prettier --single-quote --trailing-comma all --tab-width 4 --write src/**/*.{ts,js,json,vue}",
     "start": "nodemon --inspect src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,7 +27,9 @@
     "mongoose": "^7.4.0"
   },
   "devDependencies": {
+    "lint-staged": "^13.2.3",
     "morgan": "^1.10.0",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.0"
   }
 }
