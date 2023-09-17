@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const Schema = mongoose.Schema;
 
@@ -20,5 +21,22 @@ const User = new Schema(
     },
     { timestamps: true },
 );
+
+//fire a function before doc save to db - this prehook to hash pass before storing in db
+User.pre('save', async function (next) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(this.password, salt); 
+
+    console.log('user was about to created and saved', this);
+    next();
+})
+
+
+//fire a function after doc save to db
+User.post('save', function (doc, next) {
+    console.log('new user was created and saved', doc);
+    next();
+})
+
 
 module.exports = mongoose.model('User', User);

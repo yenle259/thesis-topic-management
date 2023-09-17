@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
