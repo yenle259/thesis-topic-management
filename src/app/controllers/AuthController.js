@@ -1,6 +1,28 @@
 const User = require('../models/User');
 
+//handle error if failed, err.code sth is undefined
+const handleErrors = (err) => {
+    console.log(err.message, err.code);
+    //err.code usually is undefined
+    let errors = { studentId: '', password: '' };
+
+    //duplicate err code 11000
+    if (err.code === 11000) {
+        errors.studentId = "StudentId is already existed"
+    }
+
+    if (err.message.includes('User validation failed')) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            // console.log(properties.message);
+            errors[properties.path] = properties.message;
+        });
+        console.log(errors);
+    }
+    return errors;
+}
+
 class AuthController {
+
     // [GET] /auth
     login(req, res) {
         res.send('Login Get!!');
@@ -21,8 +43,8 @@ class AuthController {
             const user = await User.create({ studentId, password });
             res.status(201).json(user);
         } catch (err) {
-            console.log(err);
-            res.status(400).send('user not created');
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 }
