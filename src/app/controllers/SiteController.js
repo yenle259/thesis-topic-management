@@ -6,15 +6,14 @@ class SiteController {
     }
 
     // [GET] /set-cookies
-    setCookies(req, res, next){
+    setCookies(req, res, next) {
         // res.setHeader('Set-Cookie','newUser=true')
-        res.cookie('newUser', false);
         res.cookie('isStudent', true);
         res.send('got cookiess');
     }
 
     // [GET] /read-cookies
-    readCookies(req, res, next){
+    readCookies(req, res, next) {
         const cookies = req.cookies;
         console.log(cookies);
         res.json(cookies);
