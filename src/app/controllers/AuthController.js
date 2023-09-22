@@ -16,7 +16,6 @@ const handleErrors = (err) => {
 
     if (err.message.includes('User validation failed')) {
         Object.values(err.errors).forEach(({ properties }) => {
-            // console.log(properties.message);
             errors[properties.path] = properties.message;
         });
         console.log(errors);
@@ -41,25 +40,21 @@ class AuthController {
     }
 
     // [POST] /auth/login
-    handleLoginActions(req, res) {
+    async handleLoginActions(req, res) {
         const { studentId, password } = req.body;
-        // try {
-        //     const user = User.create({ studentId, password });
-        //     const token = createToken(user._id);
+        try {
+            const user = await User.login(studentId, password);
+            const token = createToken(user._id);
 
-        //     res.cookie('access_token', token, {
-        //         httpOnly: false, maxAge: maxAge * 1000
-        //     });
-        //     res.cookie('jwt', false);
-        //     // status(201).json({ user: user._id });
+            res.cookie('access_token', token, {
+                httpOnly: false, maxAge: maxAge * 1000
+            });
 
-        //     res.status(201).json({ user: user._id });
-        // } catch (err) {
-        //     const errors = handleErrors(err);
-        //     res.status(400).json({ errors });
-        // }
-        console.log(studentId)
-        res.send('Login Post!!');
+            res.status(200).json({ user: user._id })
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 
     // [POST] /auth/signup
@@ -72,12 +67,13 @@ class AuthController {
             res.cookie('access_token', token, {
                 httpOnly: false, maxAge: maxAge * 1000
             });
-            res.cookie('jwt', false);
-            // status(201).json({ user: user._id });
+
+            res.status(201).json({ user: user._id });
 
             res.status(201).json({ user: user._id });
         } catch (err) {
             const errors = handleErrors(err);
+            console.log(errors);
             res.status(400).json({ errors });
         }
     }

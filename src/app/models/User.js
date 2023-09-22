@@ -25,7 +25,7 @@ const User = new Schema(
 //fire a function before doc save to db - this prehook to hash pass before storing in db
 User.pre('save', async function (next) {
     const salt = await bcrypt.genSalt();
-    this.password = await bcrypt.hash(this.password, salt); 
+    this.password = await bcrypt.hash(this.password, salt);
 
     console.log('user was about to created and saved', this);
     next();
@@ -38,5 +38,18 @@ User.post('save', function (doc, next) {
     next();
 })
 
+
+//static method to user login
+User.statics.login = async function (studentId, password) {
+    const user = await this.findOne({ studentId });
+    if (user) {
+        const auth = await bcrypt.compare(password, user.password);
+        if (auth) {
+            return user;
+        }
+        throw Error('Incorrect password');
+    }
+    throw Error('Invalid Student ID');
+}
 
 module.exports = mongoose.model('User', User);
