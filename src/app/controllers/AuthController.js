@@ -14,6 +14,17 @@ const handleErrors = (err) => {
         errors.studentId = "StudentId is already existed"
     }
 
+    //invalid user
+    if (err.message.includes('Invalid Student ID')) {
+        errors.studentId = "Student ID is invalid";
+    }
+
+    //invalid user
+    if (err.message.includes('Incorrect password')) {
+        errors.password = "Password is incorrect";
+    }
+
+    //invalid user
     if (err.message.includes('User validation failed')) {
         Object.values(err.errors).forEach(({ properties }) => {
             errors[properties.path] = properties.message;
