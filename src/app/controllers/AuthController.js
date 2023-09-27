@@ -61,25 +61,29 @@ class AuthController {
                 httpOnly: false, maxAge: maxAge * 1000
             });
 
-            res.status(200).json({ user: user._id })
+            res.status(200).json({ user, access_token: token })
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
         }
     }
 
+    // [GET] /auth/logout
+    logout(req, res) {
+        res.cookie('access_token', '', { maxAge: 1 })
+        res.send('LOgout Get!!');
+    }
+
     // [POST] /auth/signup
     async handleSignupActions(req, res) {
-        const { studentId, password } = req.body;
+        const { studentId, password, name, email, role } = req.body;
         try {
-            const user = await User.create({ studentId, password });
+            const user = await User.create({ studentId, password, name, email, role });
             const token = createToken(user._id);
 
             res.cookie('access_token', token, {
                 httpOnly: false, maxAge: maxAge * 1000
             });
-
-            res.status(201).json({ user: user._id });
 
             res.status(201).json({ user: user._id });
         } catch (err) {

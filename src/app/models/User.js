@@ -12,7 +12,9 @@ const User = new Schema(
             lowercase: true
         },
         name: { type: String, maxLength: 255 },
+        email: { type: String, maxLength: 255 },
         phone: { type: String, maxLength: 50 },
+        role: { type: String, maxLength: 50 },
         password: {
             type: String,
             minLength: [8, 'Password must have more than 8 characters'],
