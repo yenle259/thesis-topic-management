@@ -5,10 +5,10 @@ const Schema = mongoose.Schema;
 
 const User = new Schema(
     {
-        studentId: {
+        userId: {
             type: String,
             unique: true,
-            required: [true, 'StudentId is required'],
+            required: [true, 'UserId is required'],
             lowercase: true
         },
         name: { type: String, maxLength: 255 },
@@ -42,8 +42,8 @@ User.post('save', function (doc, next) {
 
 
 //static method to user login
-User.statics.login = async function (studentId, password) {
-    const user = await this.findOne({ studentId });
+User.statics.login = async function (userId, password) {
+    const user = await this.findOne({ userId });
     if (user) {
         const auth = await bcrypt.compare(password, user.password);
         if (auth) {
@@ -51,7 +51,7 @@ User.statics.login = async function (studentId, password) {
         }
         throw Error('Incorrect password');
     }
-    throw Error('Invalid Student ID');
+    throw Error('Invalid User ID');
 }
 
 module.exports = mongoose.model('User', User);

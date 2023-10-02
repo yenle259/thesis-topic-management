@@ -7,16 +7,16 @@ const cookieParser = require('cookie-parser');
 const handleErrors = (err) => {
     console.log(err.message, err.code);
     //err.code usually is undefined
-    let errors = { studentId: '', password: '' };
+    let errors = { userId: '', password: '' };
 
     //duplicate err code 11000
     if (err.code === 11000) {
-        errors.studentId = "StudentId is already existed"
+        errors.userId = "User ID is already existed"
     }
 
     //invalid user
-    if (err.message.includes('Invalid Student ID')) {
-        errors.studentId = "Student ID is invalid";
+    if (err.message.includes('Invalid User ID')) {
+        errors.userId = "User ID is invalid";
     }
 
     //invalid user
@@ -52,9 +52,9 @@ class AuthController {
 
     // [POST] /auth/login
     async handleLoginActions(req, res) {
-        const { studentId, password } = req.body;
+        const { userId, password } = req.body;
         try {
-            const user = await User.login(studentId, password);
+            const user = await User.login(userId, password);
             const token = createToken(user._id);
 
             res.cookie('access_token', token, {
@@ -76,9 +76,9 @@ class AuthController {
 
     // [POST] /auth/signup
     async handleSignupActions(req, res) {
-        const { studentId, password, name, email, role } = req.body;
+        const { userId, password, name, email, role } = req.body;
         try {
-            const user = await User.create({ studentId, password, name, email, role });
+            const user = await User.create({ userId, password, name, email, role });
             const token = createToken(user._id);
 
             res.cookie('access_token', token, {
