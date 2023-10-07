@@ -11,6 +11,7 @@ const Topic = new Schema(
         pi: { type: Schema.Types.ObjectId, ref: 'User', required: [true, "PI is required"] },
         description: { type: String, maxLength: 255 },
         type: { type: String, enum: ['NLCS', 'NL', 'LV', 'NCKH'] },
+        student: { type: Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true },
 );
