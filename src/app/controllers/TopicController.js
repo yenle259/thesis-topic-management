@@ -87,10 +87,10 @@ class TopicController {
 
     // [POST] /topic --> Create a new topic with needed attribute 
     async create(req, res) {
-        const { name, pi, type } = req.body;
+        const { name, pi, type, isDisplay, description, numberOfStudent } = req.body;
         try {
-            const topic = await Topic.create({ name, pi, type });
-            res.status(201).json({ topic: topic._id });
+            const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent });
+            res.status(201).json(topic);
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });

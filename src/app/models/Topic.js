@@ -19,7 +19,6 @@ const Topic = new Schema(
     { timestamps: true },
 );
 
-
 //fire a function after doc save to db
 Topic.post('save', function (doc, next) {
     console.log('New topic was created and saved', doc);
