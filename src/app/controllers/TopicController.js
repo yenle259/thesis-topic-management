@@ -63,7 +63,7 @@ class TopicController {
 
     // [GET] /topic/lecturer/:id
     getTopicByLecturerId(req, res, next) {
-        User.findOne({ userId: req.params.id })
+        User.findOne({ _id: req.params.id })
             .then((lecturer) => {
                 Topic.find({ pi: lecturer.id }).populate('pi')
                     .then((topics) => {
@@ -73,11 +73,10 @@ class TopicController {
             }).catch(next)
 
     }
-    // [GET] /topic/student
+    // [GET] /topic/student/:id
     async getTopicByStudentId(req, res, next) {
-        const { studentId } = req.body;
         try {
-            const topics = await Topic.find({ student: studentId }).populate('pi');
+            const topics = await Topic.find({ student: req.params.id }).populate('pi');
             res.status(201).json(topics);
         } catch (err) {
             const errors = handleErrors(err);
@@ -92,6 +91,17 @@ class TopicController {
         try {
             const topic = await Topic.create({ name, pi, type });
             res.status(201).json({ topic: topic._id });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [PUT] /topic/update/:id --> Update object with _id 
+    async update(req, res, next) {
+        try {
+            const topic = await Topic.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+            res.status(201).json(topic);
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
