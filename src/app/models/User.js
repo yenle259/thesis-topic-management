@@ -18,7 +18,8 @@ const User = new Schema(
         password: {
             type: String,
             minLength: [8, 'Password must have more than 8 characters'],
-            required: [true, 'Password is required']
+            required: [true, 'Password is required'],
+            select: false,
         },
     },
     { timestamps: true },
@@ -43,7 +44,7 @@ User.post('save', function (doc, next) {
 
 //static method to user login
 User.statics.login = async function (userId, password) {
-    const user = await this.findOne({ userId });
+    const user = await this.findOne({ userId }).select("+password");
     if (user) {
         const auth = await bcrypt.compare(password, user.password);
         if (auth) {
