@@ -21,7 +21,7 @@ class TopicController {
 
     // [GET] /topic --> get all topic
     get(req, res, next) {
-        Topic.find().populate('pi')
+        Topic.find({ isDisplay: true }).populate('pi')
             .then((topics) => {
                 res.json(topics);
             })
@@ -65,7 +65,7 @@ class TopicController {
     getTopicByLecturerId(req, res, next) {
         User.findOne({ _id: req.params.id })
             .then((lecturer) => {
-                Topic.find({ pi: lecturer.id }).populate('pi')
+                Topic.find({ pi: lecturer.id }).populate('pi').populate('student')
                     .then((topics) => {
                         res.json(topics);
                     })
@@ -120,6 +120,15 @@ class TopicController {
     // [PUT] /topic/unregister/:slug --> remove student id from topic
     removeStudentId(req, res, next) {
         Topic.findOneAndUpdate({ slug: req.params.slug }, { student: null })
+            .then((topic) => {
+                res.status(201).json(topic);
+            })
+            .catch(next);
+    }
+
+    // [DELETE] /topic/:id --> delete topic by lecturer
+    async deleteTopic(req, res, next) {
+        Topic.findByIdAndRemove({ _id: req.params.id })
             .then((topic) => {
                 res.status(201).json(topic);
             })
