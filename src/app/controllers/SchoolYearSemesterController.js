@@ -28,7 +28,7 @@ class SchoolYearSemesterController {
 
     // [GET] /sys
     getAll(req, res, next) {
-        const semesters = SchoolYearSemester.find().sort({  'schoolYear.beginAt': 1 })
+        const semesters = SchoolYearSemester.find().sort({  'schoolYear.beginAt': -1 })
             .then((semesters) => {
                 res.status(200).json(semesters);
             })

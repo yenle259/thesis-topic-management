@@ -1,3 +1,5 @@
+const PublishDate = require('../models/PublishDate');
+const Student = require('../models/Student');
 const Topic = require('../models/Topic');
 const User = require('../models/User');
 
@@ -5,7 +7,12 @@ const User = require('../models/User');
 const handleErrors = (err) => {
     console.log(err.message, err.code);
     //err.code usually is undefined
-    let errors = { name: '', pi: '', type: '' };
+    let errors = { name: '', pi: '', type: '', semester: '', publishDate: '' };
+
+    //check publish date of topic -> handle error
+    if (err.message.includes('Topic is not publish yet')) {
+        errors.publishDate = "Topic List is not publish";
+    }
 
     //invalid topic
     if (err.message.includes('Topic validation failed')) {
@@ -14,6 +21,12 @@ const handleErrors = (err) => {
         });
         console.log(errors);
     }
+
+    //Not Allow to register cuz publish Date change
+    if (err.message.includes('Topic is not publish yet')) {
+        errors.publishDate = "Topic is not publish yet"
+    }
+
     return errors;
 }
 
@@ -65,7 +78,20 @@ class TopicController {
     getTopicByLecturerId(req, res, next) {
         User.findOne({ _id: req.params.id })
             .then((lecturer) => {
-                Topic.find({ pi: lecturer.id }).populate('pi').populate('student')
+                Topic.find({ pi: lecturer.id }).populate('pi').populate('student').populate('semester')
+                    .then((topics) => {
+                        res.json(topics);
+                    })
+                    .catch(next);
+            }).catch(next)
+
+    }
+
+    // [GET] /topic/lecturerUserId/:id
+    getTopicByLecturerUserId(req, res, next) {
+        User.findOne({ userId: req.params.id })
+            .then((lecturer) => {
+                Topic.find({ pi: lecturer.id, isDisplay: true }).populate('pi').populate('student').populate('semester')
                     .then((topics) => {
                         res.json(topics);
                     })
@@ -87,9 +113,9 @@ class TopicController {
 
     // [POST] /topic --> Create a new topic with needed attribute 
     async create(req, res) {
-        const { name, pi, type, isDisplay, description, numberOfStudent } = req.body;
+        const { name, pi, type, isDisplay, description, numberOfStudent, semester } = req.body;
         try {
-            const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent });
+            const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent, semester });
             res.status(201).json(topic);
         } catch (err) {
             const errors = handleErrors(err);
@@ -110,20 +136,37 @@ class TopicController {
 
     // [POST] /topic/register --> register a student to a Lecturer's topic
     async register(req, res, next) {
-        const { studentId, topicId } = req.body;
-        Topic.updateOne({ _id: topicId }, { student: studentId })
-            .then((topic) => {
-                res.status(200).json(topic);
-            }).catch(next);
+        try {
+            const { studentId, topicId } = req.body;
+            const topic = await Topic.updateOne({ _id: topicId }, { student: studentId })
+            // const user = await User.updateOne({ _id: studentId }, { registerModule: { registerTopic: topicId, type: "LV" } })
+            res.status(201).json({ topic });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 
     // [PUT] /topic/unregister/:slug --> remove student id from topic
-    removeStudentId(req, res, next) {
-        Topic.findOneAndUpdate({ slug: req.params.slug }, { student: null })
+    async removeStudentId(req, res, next) {
+        Topic.findOneAndUpdate({ slug: req.params.slug }, { student: [] })
             .then((topic) => {
                 res.status(201).json(topic);
             })
             .catch(next);
+
+        // try {
+
+        //     const { studentId, topicId } = req.body;
+
+        //     const topic = await Topic.findOneAndUpdate({ slug: req.params.slug }, { student: [] });
+
+        //     const user = await User.updateOne({ _id: studentId }, { registerModule: { registerTopic: '', type: "LV" } })
+        //     res.status(201).json({ topic, user });
+        // } catch (err) {
+        //     const errors = handleErrors(err);
+        //     res.status(400).json({ errors });
+        // }
     }
 
     // [DELETE] /topic/:id --> delete topic by lecturer

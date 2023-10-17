@@ -14,6 +14,7 @@ const Topic = new Schema(
         numberOfStudent: { type: Number, default: 1 },
         student: [{ type: Schema.Types.ObjectId, ref: 'User' }],
         isDisplay: { type: Boolean, default: false },
+        semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
     },
     { timestamps: true },
 );
