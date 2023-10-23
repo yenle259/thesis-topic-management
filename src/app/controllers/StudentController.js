@@ -43,7 +43,7 @@ class StudentController {
             .catch(next);
     }
 
-    // [GET] /student/:id --> get all student
+    // [GET] /student/:id --> get student by id
     getStudentByUserId(req, res, next) {
         const student = Student.findOne({ userInfo: req.params.id }).populate('userInfo')
             .then((student) => {

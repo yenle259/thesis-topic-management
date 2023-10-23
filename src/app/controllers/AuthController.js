@@ -12,10 +12,11 @@ const handleUserObjectByRole = async (role, userInfo, registerModule) => {
             userObject = await Student.create({ userInfo, registerModule })
             break;
         case 'LECTURER':
-            userObject = await Lectur.create({ userInfo, registerModule })
+            userObject = await Lecturer.create({ userInfo, registerModule })
             break;
-        default:
-        // code block
+        case 'ADMIN':
+            userObject = await Lecturer.create({ userInfo, registerModule })
+            break;
     }
     return userObject;
 

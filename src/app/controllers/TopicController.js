@@ -34,7 +34,7 @@ class TopicController {
 
     // [GET] /topic --> get all topic
     get(req, res, next) {
-        Topic.find({ isDisplay: true }).populate('pi')
+        Topic.find({ isDisplay: true }).populate('pi').populate('semester')
             .then((topics) => {
                 res.json(topics);
             })
@@ -67,7 +67,7 @@ class TopicController {
 
     // [GET] /topic/:slug --> get topic by slug
     getTopicBySlug(req, res, next) {
-        Topic.find({ slug: req.params.slug }).populate('pi')
+        Topic.find({ slug: req.params.slug }).populate('pi').populate('student').populate('semester')
             .then((topic) => {
                 res.status(201).json(topic);
             })
@@ -79,6 +79,9 @@ class TopicController {
         User.findOne({ _id: req.params.id })
             .then((lecturer) => {
                 Topic.find({ pi: lecturer.id }).populate('pi').populate('student').populate('semester')
+                    .sort({
+                        createdAt: -1
+                    })
                     .then((topics) => {
                         res.json(topics);
                     })
@@ -138,7 +141,7 @@ class TopicController {
     async register(req, res, next) {
         try {
             const { studentId, topicId } = req.body;
-            const topic = await Topic.updateOne({ _id: topicId }, { student: studentId })
+            const topic = await Topic.updateOne({ _id: topicId }, { $addToSet: { student: studentId } })
             // const user = await User.updateOne({ _id: studentId }, { registerModule: { registerTopic: topicId, type: "LV" } })
             res.status(201).json({ topic });
         } catch (err) {
