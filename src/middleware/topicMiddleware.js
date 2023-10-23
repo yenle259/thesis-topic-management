@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../app/models/User');
+const User = require('../app/models/Lecturer');
 const PublishDate = require('../app/models/PublishDate');
 
 const checkPublishDate = async (req, res, next) => {

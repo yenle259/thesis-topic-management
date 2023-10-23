@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const User = require('./User');
+const User = require('./Lecturer');
 const Schema = mongoose.Schema;
 const slug = require('mongoose-slug-updater');
 
@@ -8,11 +8,11 @@ const Topic = new Schema(
     {
         name: { type: String, maxLength: 255, required: [true, 'Topic name is required'] },
         slug: { type: String, slug: 'name', unique: true },
-        pi: { type: Schema.Types.ObjectId, ref: 'User', required: [true, "PI is required"] },
+        pi: { type: Schema.Types.ObjectId, ref: 'Lecturer', required: [true, "PI is required"] },
         description: { type: String, maxLength: 500 },
         type: { type: String, enum: ['NLCS', 'NL', 'TL', 'LV',] },
         numberOfStudent: { type: Number, default: 1 },
-        student: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+        student: [{ type: Schema.Types.ObjectId, ref: 'Student' }],
         isDisplay: { type: Boolean, default: false },
         semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
     },

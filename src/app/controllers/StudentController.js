@@ -36,7 +36,7 @@ class StudentController {
 
     // [GET] /student --> get all student
     getStudents(req, res, next) {
-        Student.find().populate('userInfo')
+        Student.find()
             .then((students) => {
                 res.json(students);
             })
@@ -47,7 +47,7 @@ class StudentController {
     getStudentByUserId(req, res, next) {
         const student = Student.findOne({ userInfo: req.params.id }).populate('userInfo')
             .then((student) => {
-                res.json(student);  
+                res.json(student);
             })
             .catch(next);
     }

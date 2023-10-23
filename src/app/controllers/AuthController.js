@@ -1,26 +1,8 @@
-const User = require('../models/User');
+const Lecturer = require('../models/Lecturer');
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-
-// create Student Object or Lecturer Object by role of user
-const handleUserObjectByRole = async (role, userInfo, registerModule) => {
-    let userObject;
-    switch (role) {
-        case 'STUDENT':
-            userObject = await Student.create({ userInfo, registerModule })
-            break;
-        case 'LECTURER':
-            userObject = await Lecturer.create({ userInfo, registerModule })
-            break;
-        case 'ADMIN':
-            userObject = await Lecturer.create({ userInfo, registerModule })
-            break;
-    }
-    return userObject;
-
-}
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -73,9 +55,29 @@ class AuthController {
     async handleLoginActions(req, res) {
         const { userId, password } = req.body;
         try {
-            const user = await User.login(userId, password);
+            const user = await Lecturer.login(userId, password);
+            console.log(user);
             const token = createToken(user._id);
 
+            res.cookie('access_token', token, {
+                httpOnly: false, maxAge: maxAge * 1000
+            });
+
+            res.status(200).json({ user, access_token: token })
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [POST] /auth/login
+    async handleLogin(req, res) {
+        const { userId, password } = req.body;
+        try {
+            const user = handleAuth(userId, password);
+
+            // create token
+            const token = createToken(user._id);
             res.cookie('access_token', token, {
                 httpOnly: false, maxAge: maxAge * 1000
             });
@@ -97,7 +99,7 @@ class AuthController {
     async handleSignupActions(req, res) {
         const { userId, password, name, email, role, registerModule } = req.body;
         try {
-            const user = await User.create({ userId, password, name, email, role });
+            const user = await Lecturer.create({ userId, password, name, email, role });
             const token = createToken(user._id);
             const userObject = handleUserObjectByRole(role, user._id, registerModule);
 
@@ -112,6 +114,39 @@ class AuthController {
             res.status(400).json({ errors });
         }
     }
+
+    // [POST] /auth/student/signup
+    async handleStudentSignup(req, res) {
+        const { userId, password, name, email, moduleType } = req.body;
+        try {
+            const registerModule = {
+                semester: '6526d24c7547ab02d497a7a4',
+                moduleType
+            }
+            const student = await Student.create({ userId, password, name, email, registerModule });
+
+            res.status(201).json({ student: student._id });
+        } catch (err) {
+            const errors = handleErrors(err);
+            console.log(errors);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [POST] /auth/lecturer/signup
+    async handleUserSignup(req, res) {
+        const { userId, password, name, email, role } = req.body;
+        try {
+            const user = await Lecturer.create({ userId, password, name, email, role });
+
+            res.status(201).json({ user });
+        } catch (err) {
+            const errors = handleErrors(err);
+            console.log(errors);
+            res.status(400).json({ errors });
+        }
+    }
+
 }
 
 module.exports = new AuthController();

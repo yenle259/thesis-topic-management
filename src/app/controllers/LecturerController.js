@@ -1,40 +1,33 @@
+const Lecturer = require('../models/Lecturer');
 
-const StudentRegisterModule = require('../models/Student');
+class LecturerController {
 
-//handle error if failed, err.code sth is undefined
-const handleErrors = (err) => {
-    let errors = { userInfo };
-
-    if (err.message.includes('Lecturer validation failed')) {
-        Object.values(err.errors).forEach((item) => {
-            if (item.path === 'userInfo' && item.messageFormat === undefined) {
-                errors.student = 'User ID is invalid'
-            }
-            else {
-                const { properties } = item;
-                errors[properties.path] = properties.message;
-            }
-        });
-    }
-    return errors;
-};
-
-class StudentRegisterModuleController {
-
-    // [POST] /student
-    async create(req, res) {
-        const { userInfo } = req.body;
-        try {
-            const lecturer = await StudentRegisterModule.create({ userInfo });
-            res.status(201).json(lecturer);
-        } catch (err) {
-            const errors = handleErrors(err);
-            console.log(errors);
-            res.status(400).json({ errors });
-        }
+    // [GET] /user
+    get(req, res, next) {
+        User.find({})
+            .then((courses) => {
+                res.json(courses);
+            })
+            .catch(next);
     }
 
+    // [GET] /user/lecturers/:userId
+    getLecturersById(req, res, next) {
+        User.findOne({ userId: req.params.id })
+            .then((lecturer) => {
+                res.json(lecturer);
+            })
+            .catch(next);
+    }
 
+    // [GET] /user/lecturers
+    getLecturers(req, res, next) {
+        User.find({ role: "LECTURER" })
+            .then((lecturers) => {
+                res.json(lecturers);
+            })
+            .catch(next);
+    }
 }
 
-module.exports = new StudentRegisterModuleController();
+module.exports = new LecturerController();

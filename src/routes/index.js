@@ -1,6 +1,6 @@
 const topicRouter = require('./topic');
 const sysRouter = require('./sys');
-const userRouter = require('./user');
+const lecturerRouter = require('./lecturer');
 const siteRouter = require('./site');
 const authRouter = require('./auth');
 const studentRouter = require('./student');
@@ -11,7 +11,7 @@ function route(app) {
     app.use('/auth', authRouter);
     app.use('/sys', sysRouter);
     app.use('/topic', requireAuth, topicRouter);
-    app.use('/user', requireAuth, userRouter);
+    app.use('/lecturer', requireAuth, lecturerRouter);
     app.use('/', siteRouter);
 }
 

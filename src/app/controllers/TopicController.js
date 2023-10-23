@@ -1,7 +1,7 @@
 const PublishDate = require('../models/PublishDate');
 const Student = require('../models/Student');
 const Topic = require('../models/Topic');
-const User = require('../models/User');
+const Lecturer = require('../models/Lecturer');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -26,7 +26,6 @@ const handleErrors = (err) => {
     if (err.message.includes('Topic is not publish yet')) {
         errors.publishDate = "Topic is not publish yet"
     }
-
     return errors;
 }
 
@@ -76,7 +75,7 @@ class TopicController {
 
     // [GET] /topic/lecturer/:id
     getTopicByLecturerId(req, res, next) {
-        User.findOne({ _id: req.params.id })
+        Lecturer.findOne({ _id: req.params.id })
             .then((lecturer) => {
                 Topic.find({ pi: lecturer.id }).populate('pi').populate('student').populate('semester')
                     .sort({
@@ -92,7 +91,7 @@ class TopicController {
 
     // [GET] /topic/lecturerUserId/:id
     getTopicByLecturerUserId(req, res, next) {
-        User.findOne({ userId: req.params.id })
+        Lecturer.findOne({ userId: req.params.id })
             .then((lecturer) => {
                 Topic.find({ pi: lecturer.id, isDisplay: true }).populate('pi').populate('student').populate('semester')
                     .then((topics) => {
@@ -100,8 +99,8 @@ class TopicController {
                     })
                     .catch(next);
             }).catch(next)
-
     }
+    
     // [GET] /topic/student/:id
     async getTopicByStudentId(req, res, next) {
         try {
@@ -141,8 +140,7 @@ class TopicController {
     async register(req, res, next) {
         try {
             const { studentId, topicId } = req.body;
-            const topic = await Topic.updateOne({ _id: topicId }, { $addToSet: { student: studentId } })
-            // const user = await User.updateOne({ _id: studentId }, { registerModule: { registerTopic: topicId, type: "LV" } })
+            const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: studentId } })
             res.status(201).json({ topic });
         } catch (err) {
             const errors = handleErrors(err);
@@ -157,19 +155,6 @@ class TopicController {
                 res.status(201).json(topic);
             })
             .catch(next);
-
-        // try {
-
-        //     const { studentId, topicId } = req.body;
-
-        //     const topic = await Topic.findOneAndUpdate({ slug: req.params.slug }, { student: [] });
-
-        //     const user = await User.updateOne({ _id: studentId }, { registerModule: { registerTopic: '', type: "LV" } })
-        //     res.status(201).json({ topic, user });
-        // } catch (err) {
-        //     const errors = handleErrors(err);
-        //     res.status(400).json({ errors });
-        // }
     }
 
     // [DELETE] /topic/:id --> delete topic by lecturer
@@ -180,7 +165,6 @@ class TopicController {
             })
             .catch(next);
     }
-
 }
 
 module.exports = new TopicController();
