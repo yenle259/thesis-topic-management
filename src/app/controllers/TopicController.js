@@ -33,7 +33,7 @@ class TopicController {
 
     // [GET] /topic --> get all topic
     get(req, res, next) {
-        Topic.find({ isDisplay: true }).populate('pi').populate('semester')
+        Topic.find({ isDisplay: true }).populate('pi').populate('semester').populate('student')
             .then((topics) => {
                 res.json(topics);
             })
@@ -100,11 +100,11 @@ class TopicController {
                     .catch(next);
             }).catch(next)
     }
-    
+
     // [GET] /topic/student/:id
     async getTopicByStudentId(req, res, next) {
         try {
-            const topics = await Topic.find({ student: req.params.id }).populate('pi');
+            const topics = await Topic.find({ student: req.params.id }).populate('pi').populate('semester');
             res.status(201).json(topics);
         } catch (err) {
             const errors = handleErrors(err);
@@ -150,7 +150,9 @@ class TopicController {
 
     // [PUT] /topic/unregister/:slug --> remove student id from topic
     async removeStudentId(req, res, next) {
-        Topic.findOneAndUpdate({ slug: req.params.slug }, { student: [] })
+
+        const { studentId } = req.body;
+        Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: studentId } })
             .then((topic) => {
                 res.status(201).json(topic);
             })

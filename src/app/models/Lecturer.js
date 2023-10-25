@@ -44,7 +44,10 @@ Lecturer.post('save', function (doc, next) {
 
 Lecturer.statics.login = async function (userId, password) {
 
-    const student = await Student.findOne({ userId }).select("+password");
+    const student = await Student.findOne({ userId }).select("+password").populate({
+        path: 'registerModule',
+        populate: { path: 'semester' }
+    });
     const user = await this.findOne({ userId }).select("+password");
 
     if (student) {

@@ -18,10 +18,10 @@ const Student = new Schema(
             required: [true, 'Password is required'],
             select: false,
         },
-        registerModule: {
+        registerModule: [{
             semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
-            moduleType: { type: String, enum: ['NLCS', 'NL', 'TL', 'LV'], required: [true, 'Module type is required'] }
-        },
+            moduleType: { type: String }
+        }],
     }, { timestamps: true },
 );
 

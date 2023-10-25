@@ -11,7 +11,7 @@ function route(app) {
     app.use('/auth', authRouter);
     app.use('/sys', sysRouter);
     app.use('/topic', requireAuth, topicRouter);
-    app.use('/lecturer', requireAuth, lecturerRouter);
+    app.use('/user', requireAuth, lecturerRouter);
     app.use('/', siteRouter);
 }
 

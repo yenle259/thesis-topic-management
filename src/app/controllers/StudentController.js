@@ -36,7 +36,10 @@ class StudentController {
 
     // [GET] /student --> get all student
     getStudents(req, res, next) {
-        Student.find()
+        Student.find().populate({
+            path: 'registerModule',
+            populate: { path: 'semester' }
+        })
             .then((students) => {
                 res.json(students);
             })
@@ -45,7 +48,7 @@ class StudentController {
 
     // [GET] /student/:id --> get student by id
     getStudentByUserId(req, res, next) {
-        const student = Student.findOne({ userInfo: req.params.id }).populate('userInfo')
+        const student = Student.findOne({ userInfo: req.params.id })
             .then((student) => {
                 res.json(student);
             })

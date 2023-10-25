@@ -4,7 +4,7 @@ class LecturerController {
 
     // [GET] /user
     get(req, res, next) {
-        User.find({})
+        Lecturer.find({})
             .then((courses) => {
                 res.json(courses);
             })
@@ -13,7 +13,7 @@ class LecturerController {
 
     // [GET] /user/lecturers/:userId
     getLecturersById(req, res, next) {
-        User.findOne({ userId: req.params.id })
+        Lecturer.findOne({ userId: req.params.id })
             .then((lecturer) => {
                 res.json(lecturer);
             })
@@ -22,7 +22,7 @@ class LecturerController {
 
     // [GET] /user/lecturers
     getLecturers(req, res, next) {
-        User.find({ role: "LECTURER" })
+        Lecturer.find({ role: "LECTURER" })
             .then((lecturers) => {
                 res.json(lecturers);
             })
