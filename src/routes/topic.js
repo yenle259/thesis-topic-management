@@ -4,6 +4,7 @@ var router = express.Router();
 const topicController = require('../app/controllers/TopicController');
 const { checkPublishDate } = require('../middleware/topicMiddleware');
 
+router.put('/review', topicController.review);
 router.post('/register', topicController.register);
 router.put('/update/:id', topicController.update);
 router.get('/student/:id', topicController.getTopicByStudentId);

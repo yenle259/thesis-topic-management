@@ -33,7 +33,10 @@ class TopicController {
 
     // [GET] /topic --> get all topic
     get(req, res, next) {
-        Topic.find({ isDisplay: true }).populate('pi').populate('semester').populate('student')
+        Topic.find({ isDisplay: true }).populate('pi').populate('semester').populate({
+            path: 'student',
+            populate: { path: 'studentInfo' }
+        })
             .then((topics) => {
                 res.json(topics);
             })
@@ -66,7 +69,10 @@ class TopicController {
 
     // [GET] /topic/:slug --> get topic by slug
     getTopicBySlug(req, res, next) {
-        Topic.find({ slug: req.params.slug }).populate('pi').populate('student').populate('semester')
+        Topic.find({ slug: req.params.slug }).populate('pi').populate('semester').populate({
+            path: 'student',
+            populate: { path: 'studentInfo' }
+        })
             .then((topic) => {
                 res.status(201).json(topic);
             })
@@ -77,7 +83,10 @@ class TopicController {
     getTopicByLecturerId(req, res, next) {
         Lecturer.findOne({ _id: req.params.id })
             .then((lecturer) => {
-                Topic.find({ pi: lecturer.id }).populate('pi').populate('student').populate('semester')
+                Topic.find({ pi: lecturer.id }).populate('pi').populate('semester').populate({
+                    path: 'student',
+                    populate: { path: 'studentInfo' }
+                })
                     .sort({
                         createdAt: -1
                     })
@@ -104,13 +113,12 @@ class TopicController {
     // [GET] /topic/student/:id
     async getTopicByStudentId(req, res, next) {
         try {
-            const topics = await Topic.find({ student: req.params.id }).populate('pi').populate('semester');
+            const topics = await Topic.find({ 'student.studentInfo': req.params.id }).populate('pi').populate('semester');
             res.status(201).json(topics);
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
         }
-
     }
 
     // [POST] /topic --> Create a new topic with needed attribute 
@@ -140,7 +148,7 @@ class TopicController {
     async register(req, res, next) {
         try {
             const { studentId, topicId } = req.body;
-            const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: studentId } })
+            const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: { studentInfo: studentId, status: 'PENDING' } } })
             res.status(201).json({ topic });
         } catch (err) {
             const errors = handleErrors(err);
@@ -150,13 +158,28 @@ class TopicController {
 
     // [PUT] /topic/unregister/:slug --> remove student id from topic
     async removeStudentId(req, res, next) {
-
         const { studentId } = req.body;
-        Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: studentId } })
+        Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: { studentInfo: studentId } } })
             .then((topic) => {
                 res.status(201).json(topic);
             })
             .catch(next);
+    }
+
+    // [PUT] /topic/review --> update status of register student
+    async review(req, res, next) {
+        try {
+            const { topicIndex, status, reason } = req.body;
+            const topic = await Topic.findOneAndUpdate({ 'student._id': topicIndex }, {
+                '$set': {
+                    'student.$.status': status,
+                    'student.$.reason': reason,
+                }
+            });
+            res.status(201).json({ topic });
+        } catch (err) {
+            console.log(err)
+        }
     }
 
     // [DELETE] /topic/:id --> delete topic by lecturer

@@ -12,7 +12,11 @@ const Topic = new Schema(
         description: { type: String, maxLength: 500 },
         type: { type: String, enum: ['NLCS', 'NL', 'TL', 'LV',] },
         numberOfStudent: { type: Number, default: 1 },
-        student: [{ type: Schema.Types.ObjectId, ref: 'Student' }],
+        student: [{
+            studentInfo: { type: Schema.Types.ObjectId, ref: 'Student' },
+            status: { type: String, enum: ['APPROVE', 'REJECT', 'PENDING'] },
+            reason: { type: String, minlength: 15 },
+        }],
         isDisplay: { type: Boolean, default: false },
         semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
     },
