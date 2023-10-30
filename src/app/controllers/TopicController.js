@@ -2,6 +2,7 @@ const PublishDate = require('../models/PublishDate');
 const Student = require('../models/Student');
 const Topic = require('../models/Topic');
 const Lecturer = require('../models/Lecturer');
+const ReportTopic = require('../models/ReportTopic');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -169,14 +170,21 @@ class TopicController {
     // [PUT] /topic/review --> update status of register student
     async review(req, res, next) {
         try {
-            const { topicIndex, status, reason } = req.body;
+            const { topicIndex, status, reason, studentId } = req.body;
             const topic = await Topic.findOneAndUpdate({ 'student._id': topicIndex }, {
                 '$set': {
                     'student.$.status': status,
                     'student.$.reason': reason,
                 }
             });
-            res.status(201).json({ topic });
+
+            if (status === 'APPROVE') {
+                const reportTopic = await ReportTopic.create({ pi: topic.pi._id, student: studentId, topic: topic._id, isReport: false });
+                res.status(201).json({ topic, reportTopic });
+
+            } else {
+                res.status(201).json({ topic });
+            }
         } catch (err) {
             console.log(err)
         }
