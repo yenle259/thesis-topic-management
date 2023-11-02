@@ -133,6 +133,26 @@ class AuthController {
         }
     }
 
+    // [POST] /auth/student/signup
+    async createStudents(req, res) {
+        const { userId, password, name, email, moduleType } = req.body;
+        try {
+            const registerModule = {
+                semester: '6526d24c7547ab02d497a7a4',
+                moduleType
+            }
+            const student = await Student.create({ userId, password, name, email, registerModule });
+
+            res.status(201).json({ student: student._id });
+            const sys = await SchoolYearSemester.insertMany(data);
+            res.status(201).json(sys);
+        } catch (err) {
+            const errors = handleErrors(err);
+            console.log(errors);
+            res.status(400).json({ errors });
+        }
+    }
+
     // [POST] /auth/lecturer/signup
     async handleUserSignup(req, res) {
         const { userId, password, name, email, role } = req.body;

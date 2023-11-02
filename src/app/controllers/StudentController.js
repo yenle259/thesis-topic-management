@@ -3,7 +3,7 @@ const Student = require('../models/Student');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
-    let errors = { userInfo: '', registerModule: '' };
+    let errors = { userId: '', name: '', email: '', moduleType: '' };
 
     if (err.message.includes('Student validation failed')) {
         Object.values(err.errors).forEach((item) => {
@@ -55,6 +55,21 @@ class StudentController {
             .catch(next);
     }
 
+    // [PUT] /student/update/:id --> Update object with _id 
+    async update(req, res, next) {
+        try {
+            const { userId, name, email, moduleType } = req.body;
+            const student = await Student.findOneAndUpdate({ _id: req.params.id, 'registerModule.semester': '6526d24c7547ab02d497a7a4' }, {
+                '$set': {
+                    userId, name, email,
+                    'registerModule.$.moduleType': moduleType,
+                },
+            }, { new: true })
+            res.status(200).json(student);
+        } catch (err) {
+            console.log(err)
+        }
+    }
 }
 
 module.exports = new StudentController();
