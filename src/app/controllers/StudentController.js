@@ -3,18 +3,17 @@ const Student = require('../models/Student');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
-    let errors = { userId: '', name: '', email: '', moduleType: '' };
+    let errors = { userId: '', name: '', email: '', moduleType: '', password: '' };
+
+    if (err.code === 11000) {
+        errors.userId = "Mã số sinh viên đã tồn tại"
+    }
 
     if (err.message.includes('Student validation failed')) {
-        Object.values(err.errors).forEach((item) => {
-            if (item.path === 'userInfo' && item.messageFormat === undefined) {
-                errors.student = 'User ID is invalid'
-            }
-            else {
-                const { properties } = item;
-                errors[properties.path] = properties.message;
-            }
+        Object.values(err.errors).forEach(({ properties }) => {
+            errors[properties.path] = properties.message;
         });
+        // console.log(errors);
     }
     return errors;
 };
@@ -39,6 +38,8 @@ class StudentController {
         Student.find().populate({
             path: 'registerModule',
             populate: { path: 'semester' }
+        }).sort({
+            createdAt: -1
         })
             .then((students) => {
                 res.json(students);
@@ -69,6 +70,68 @@ class StudentController {
         } catch (err) {
             console.log(err)
         }
+    }
+
+    // [POST] /student/account
+    async handleStudentSignup(req, res) {
+        const { userId, password, name, email, moduleType } = req.body;
+        try {
+            const registerModule = {
+                semester: '6526d24c7547ab02d497a7a4',
+                moduleType
+            }
+            const student = await Student.create({ userId, password, name, email, registerModule });
+
+            res.status(201).json({ student: student._id });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [POST] /student/account/import --> Create a list of student by file import
+    async importAccount(req, res, next) {
+        try {
+            const data = req.body;
+            //handle data before insert
+            const handleData = data.map((student) => ({
+                userId: student.userId,
+                name: student.name,
+                password: student.password,
+                email: student.email,
+                registerModule: [
+                    {
+                        semester: '6526d24c7547ab02d497a7a4',
+                        moduleType: student.moduleType ?? ''
+                    }
+                ]
+            }))
+
+            const students = await Student.insertMany(handleData, { ordered: false })
+            res.status(200).json(students);
+        } catch (err) {
+            if (err.writeErrors) {
+                let errors = { userId: [] }
+                err.writeErrors.map((error) => {
+                    if (err.code === 11000) {
+                        errors.userId.push('MSSV: '+ error.err.op.userId + ' đã tồn tại\n')
+                    }
+                })
+                res.status(400).json({ errors });
+            } else {
+                const errors = handleErrors(err);
+                res.status(400).json({ errors });
+            }
+        }
+    }
+
+    // [DELETE] /student/:id --> delete student by id
+    async deleteStudent(req, res, next) {
+        Student.findByIdAndRemove({ _id: req.params.id })
+            .then((student) => {
+                res.status(200).json(student);
+            })
+            .catch(next);
     }
 }
 
