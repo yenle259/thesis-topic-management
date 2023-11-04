@@ -47,6 +47,35 @@ class StudentController {
             .catch(next);
     }
 
+    // [GET] /student --> get students + pagination
+    async getStudentsPerPage(req, res, next) {
+        //limit: item per page
+        const { page, limit } = req.query;
+        try {
+            const students = await Student.find().populate({
+                path: 'registerModule',
+                populate: { path: 'semester' }
+            }).sort({
+                createdAt: -1
+            })
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await Student.count();
+
+            // return response with posts, total pages, and current page
+            res.json({
+                students,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
+            });
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
+
     // [GET] /student/:id --> get student by id
     getStudentByUserId(req, res, next) {
         const student = Student.findOne({ userInfo: req.params.id })
@@ -114,7 +143,7 @@ class StudentController {
                 let errors = { userId: [] }
                 err.writeErrors.map((error) => {
                     if (err.code === 11000) {
-                        errors.userId.push('MSSV: '+ error.err.op.userId + ' đã tồn tại\n')
+                        errors.userId.push('MSSV: ' + error.err.op.userId + ' đã tồn tại\n')
                     }
                 })
                 res.status(400).json({ errors });
