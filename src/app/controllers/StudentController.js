@@ -51,8 +51,10 @@ class StudentController {
     async getStudentsPerPage(req, res, next) {
         //limit: item per page
         const { page, limit } = req.query;
+        const search = req.query.search || "";
         try {
-            const students = await Student.find().populate({
+            //options : i ->case sensitve
+            const students = await Student.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).populate({
                 path: 'registerModule',
                 populate: { path: 'semester' }
             }).sort({
@@ -62,7 +64,7 @@ class StudentController {
                 .skip((page - 1) * limit)
                 .exec();
 
-            const count = await Student.count();
+            const count = await Student.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();;
 
             // return response with posts, total pages, and current page
             res.json({
