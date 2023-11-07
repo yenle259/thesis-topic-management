@@ -3,12 +3,13 @@ const Student = require('../models/Student');
 const Topic = require('../models/Topic');
 const Lecturer = require('../models/Lecturer');
 const ReportTopic = require('../models/ReportTopic');
+const constant = require('../../constants')
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
     console.log(err.message, err.code);
     //err.code usually is undefined
-    let errors = { name: '', pi: '', type: '', semester: '', publishDate: '' };
+    let errors = { name: '', pi: '', type: '', semester: '', publishDate: '', status: '' };
 
     //check publish date of topic -> handle error
     if (err.message.includes('Topic is not publish yet')) {
@@ -81,22 +82,28 @@ class TopicController {
     }
 
     // [GET] /topic/lecturer/:id
-    getTopicByLecturerId(req, res, next) {
-        Lecturer.findOne({ _id: req.params.id })
-            .then((lecturer) => {
-                Topic.find({ pi: lecturer.id }).populate('pi').populate('semester').populate({
+    async getTopicByLecturerId(req, res, next) {
+        const { status } = req.query;
+        try {
+            const lecturer = await Lecturer.findOne({ _id: req.params.id })
+            if (status) {
+                const topics = await Topic.find({ pi: lecturer._id, status: 'SUGGESTED' }).populate('pi').populate('semester').populate({
                     path: 'student',
                     populate: { path: 'studentInfo' }
                 })
-                    .sort({
-                        createdAt: -1
-                    })
-                    .then((topics) => {
-                        res.json(topics);
-                    })
-                    .catch(next);
-            }).catch(next)
-
+                res.status(200).json({ topics });
+            } else {
+                const topics = await Topic.find({
+                    pi: lecturer._id
+                }).populate('pi').populate('semester').populate({
+                    path: 'student',
+                    populate: { path: 'studentInfo' }
+                })
+                res.status(200).json({ topics });
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     // [GET] /topic/lecturerUserId/:id
@@ -128,6 +135,25 @@ class TopicController {
         try {
             const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent, semester });
             res.status(201).json(topic);
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [POST] /topic/suggest --> Create a new suggest topic
+    async suggested(req, res) {
+        const { name, pi, type, description, studentId } = req.body;
+        const suggestedTopic = {
+            name, pi, type, description,
+            student: { studentInfo: studentId, status: 'PENDING' },
+            numberOfStudent: 1,
+            status: 'SUGGESTED',
+            semester: constant.RECENT_SEMESTER_ID,
+        }
+        try {
+            const topic = await Topic.create(suggestedTopic);
+            res.status(201).json({ topic });
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });

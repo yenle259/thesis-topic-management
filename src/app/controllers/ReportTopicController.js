@@ -37,6 +37,23 @@ class ReportTopicController {
             .catch(next);
     }
 
+    // [GET] /report/lecturer/:id --> get students + pagination
+    async getReportByLecturerId(req, res, next) {
+        //limit: item per page
+        try {
+            const topics = await ReportTopic.find({ 'pi': req.params.id }).populate('pi').populate('student').populate('topic')
+                .sort({ createdAt: '-1' })
+            const total = await ReportTopic.find({ 'pi': req.params.id }).countDocuments();
+
+            res.status(200).json({
+                topics,
+                total
+            });
+        } catch (err) {
+            console.error(err.message);
+        }
+    }
+
 }
 
 module.exports = new ReportTopicController();

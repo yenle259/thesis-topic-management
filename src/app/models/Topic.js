@@ -18,6 +18,7 @@ const Topic = new Schema(
             reason: { type: String, minlength: 15 },
         }],
         isDisplay: { type: Boolean, default: false },
+        status: { type: String, enum: ['SUGGESTED', 'CREATED'] },
         semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
     },
     { timestamps: true },

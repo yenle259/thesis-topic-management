@@ -1,5 +1,6 @@
-
+const constant = require('../../constants')
 const Student = require('../models/Student');
+const bcrypt = require('bcrypt');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -15,8 +16,24 @@ const handleErrors = (err) => {
         });
         // console.log(errors);
     }
+
+    // if (err.writeErrors) {
+    //     // let errors = { userId: [] }
+    //     err.writeErrors.map((error) => {
+    //         if (err.code === 11000) {
+    //             errors.userId = 'MSSV: ' + error.err.op.userId + ' đã tồn tại\n';
+    //         }
+    //     })
+    // }
+
     return errors;
 };
+
+const hashPassword = async (password) => {
+    const salt = await bcrypt.genSalt();
+    const hashPassword = await bcrypt.hash(password, salt);
+    return hashPassword;
+}
 
 class StudentController {
 
@@ -53,12 +70,12 @@ class StudentController {
         const { page, limit } = req.query;
         const search = req.query.search || "";
         try {
-            //options : i ->case sensitve
+            //options : i -> case sensitve
             const students = await Student.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).populate({
                 path: 'registerModule',
                 populate: { path: 'semester' }
             }).sort({
-                createdAt: -1
+                userId: 'desc'
             })
                 .limit(limit * 1)
                 .skip((page - 1) * limit)
@@ -87,6 +104,30 @@ class StudentController {
             .catch(next);
     }
 
+    // [GET] /student/module/:id --> get register module at recent semester(default) of student by Id
+    async getRegisterModule(req, res, next) {
+        const { semesterId } = req.query;
+        try {
+            const student = await Student.findOne({ _id: req.params.id }).populate({
+                path: 'registerModule',
+                populate: { path: 'semester' }
+            })
+            const { registerModule } = student;
+            console.log(registerModule)
+            if (semesterId) {
+                const module = registerModule.find((module) => module.semester._id === semesterId)
+                res.status(200).json({ module });
+            } else {
+                const module = registerModule.find((module) => module.semester._id = constant.RECENT_SEMESTER_ID)
+                res.status(200).json({ module });
+            }
+        } catch (err) {
+            console.log(err)
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
     // [PUT] /student/update/:id --> Update object with _id 
     async update(req, res, next) {
         try {
@@ -99,7 +140,9 @@ class StudentController {
             }, { new: true })
             res.status(200).json(student);
         } catch (err) {
-            console.log(err)
+            // console.log(err)
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 
@@ -124,23 +167,27 @@ class StudentController {
     async importAccount(req, res, next) {
         try {
             const data = req.body;
-            //handle data before insert
-            const handleData = data.map((student) => ({
-                userId: student.userId,
-                name: student.name,
-                password: student.password,
-                email: student.email,
-                registerModule: [
-                    {
-                        semester: '6526d24c7547ab02d497a7a4',
-                        moduleType: student.moduleType ?? ''
-                    }
-                ]
-            }))
-
-            const students = await Student.insertMany(handleData, { ordered: false })
+            const accountData = data.map((student) => {
+                const salt = bcrypt.genSaltSync();
+                const hash = bcrypt.hashSync(student.password, salt)
+                return new Student({
+                    userId: student.userId,
+                    name: student.name,
+                    password: hash ?? student.password,
+                    email: student.email,
+                    registerModule: [
+                        {
+                            semester: '6526d24c7547ab02d497a7a4',
+                            moduleType: student.moduleType ?? ''
+                        }
+                    ]
+                })
+            }
+            )
+            const students = await Student.insertMany(accountData, { ordered: false })
             res.status(200).json(students);
         } catch (err) {
+            console.log(err)
             if (err.writeErrors) {
                 let errors = { userId: [] }
                 err.writeErrors.map((error) => {

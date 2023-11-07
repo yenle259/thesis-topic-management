@@ -40,6 +40,12 @@ Student.post('save', function (doc, next) {
     next();
 })
 
+Student.statics.hashPassword = async function (password) {
+    const salt = await bcrypt.genSalt();
+    const hashPassword = await bcrypt.hash(password, salt);
+    return hashPassword;
+}
+
 //static method to user login
 Student.statics.login = async function (userId, password) {
     const user = await this.findOne({ userId }).select("+password");
