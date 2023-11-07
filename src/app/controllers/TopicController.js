@@ -141,6 +141,17 @@ class TopicController {
         }
     }
 
+    // [PUT] /topic/update/:id --> Update object with _id 
+    async update(req, res, next) {
+        try {
+            const topic = await Topic.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+            res.status(201).json(topic);
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
     // [POST] /topic/suggest --> Create a new suggest topic
     async suggested(req, res) {
         const { name, pi, type, description, studentId } = req.body;
@@ -154,17 +165,6 @@ class TopicController {
         try {
             const topic = await Topic.create(suggestedTopic);
             res.status(201).json({ topic });
-        } catch (err) {
-            const errors = handleErrors(err);
-            res.status(400).json({ errors });
-        }
-    }
-
-    // [PUT] /topic/update/:id --> Update object with _id 
-    async update(req, res, next) {
-        try {
-            const topic = await Topic.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
-            res.status(201).json(topic);
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
