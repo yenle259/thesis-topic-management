@@ -17,6 +17,7 @@ const checkPublishDate = async (req, res, next) => {
     }
 }
 
+//check register module of student is suitable for register this topic with topicId in param
 const isValidToRegister = async (req, res, next) => {
 
     const { studentId, topicId } = req.body;
@@ -45,4 +46,32 @@ const isValidToRegister = async (req, res, next) => {
 
 }
 
-module.exports = { checkPublishDate, isValidToRegister }
+//check register module of student is suitable for register this topic with topicId in param
+const isValidToSuggest = async (req, res, next) => {
+
+    const { studentId, type } = req.body;
+    let errors = { student: '' };
+
+    const student = await Student.findOne({ _id: studentId }).populate({
+        path: 'registerModule',
+        populate: { path: 'semester' }
+    })
+    //get moduleType of recent semester
+    const moduleType = student.registerModule.find((module) => module.semester._id = constant.RECENT_SEMESTER_ID).moduleType;
+
+    if (moduleType) {
+        if (moduleType.split('-').includes(type)) {
+            next();
+        } else {
+            // errors.student = 'Đề tài sinh viên đăng ký không phù hợp với học phần của sinh viên'
+            errors.student = 'Đề tài sinh viên đăng ký không hợp lệ'
+            res.status(400).json({ errors })
+        }
+    } else {
+        errors.student = 'Sinh viên chưa đăng ký học phần';
+        res.status(400).json({ errors })
+    }
+
+}
+
+module.exports = { checkPublishDate, isValidToRegister, isValidToSuggest }

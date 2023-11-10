@@ -2,9 +2,9 @@ var express = require('express');
 var router = express.Router();
 
 const topicController = require('../app/controllers/TopicController');
-const { checkPublishDate, isValidToRegister } = require('../middleware/topicMiddleware');
+const { checkPublishDate, isValidToRegister, isValidToSuggest} = require('../middleware/topicMiddleware');
 
-router.post('/suggest', isValidToRegister, topicController.suggested);
+router.post('/suggest', isValidToSuggest, topicController.suggested);
 router.put('/review', topicController.review);
 router.post('/register', isValidToRegister, topicController.register);
 

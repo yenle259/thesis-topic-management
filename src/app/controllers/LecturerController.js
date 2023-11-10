@@ -1,4 +1,21 @@
 const Lecturer = require('../models/Lecturer');
+const bcrypt = require('bcrypt');
+
+const handleErrors = (err) => {
+    let errors = { userId: '', name: '', email: '', moduleType: '', password: '' };
+
+    if (err.code === 11000) {
+        errors.userId = "Mã số sinh viên đã tồn tại"
+    }
+
+    if (err.message.includes('Lecturer validation failed')) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            errors[properties.path] = properties.message;
+        });
+        // console.log(errors);
+    }
+    return errors;
+};
 
 class LecturerController {
 
@@ -21,12 +38,73 @@ class LecturerController {
     }
 
     // [GET] /user/lecturers
-    getLecturers(req, res, next) {
-        Lecturer.find({ role: "LECTURER" })
-            .then((lecturers) => {
-                res.json(lecturers);
-            })
-            .catch(next);
+    async getLecturers(req, res) {
+        const { page, limit } = req.query;
+        const search = req.query.search || "";
+        const role = req.query.role || "";
+
+        console.log(role)
+        try {
+            const lecturers = await Lecturer.find()
+                .or([
+                    { 'role': role },
+                    { name: { $regex: search, $options: "i" } },
+                    { userId: { $regex: search, $options: "i" } }])
+                .sort({
+                    userId: 'desc'
+                })
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await Lecturer.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();
+
+            res.status(200).json({
+                lecturers,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count,
+            });
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    // [POST] /user/account
+    async createLecturer(req, res) {
+        const { userId, password, name, email } = req.body;
+        try {
+            const lecturer = await Lecturer.create({ userId, password, name, email, role: 'LECTURER' });
+
+            res.status(201).json({ lecturer: lecturer._id });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [PUT] /user/update/:id --> Update user by id
+    async updateLecturer(req, res, next) {
+        try {
+            const { userId, name, email, password, role } = req.body;
+            if (password) {
+                const salt = bcrypt.genSaltSync();
+                const hashPassword = bcrypt.hashSync(password, salt)
+            }
+
+            console.log(name);
+            const lecturer = await Lecturer.findOneAndUpdate({ _id: req.params.id },
+                {
+                    userId, name, email, role
+                },
+                { new: true })
+
+            res.status(200).json(lecturer);
+        } catch (err) {
+            console.log(err)
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 }
 
