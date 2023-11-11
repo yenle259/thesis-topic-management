@@ -43,9 +43,17 @@ class LecturerController {
         const search = req.query.search || "";
         const role = req.query.role || "";
 
-        console.log(role)
+        let queryRole;
+
+        if (role === 'LECTURER') {
+            queryRole = { 'role': 'LECTURER' }
+        }
+        if (role === 'ADMIN') {
+            queryRole = { 'role': 'ADMIN' }
+        }
+
         try {
-            const lecturers = await Lecturer.find()
+            const lecturers = await Lecturer.find(queryRole)
                 .or([
                     { 'role': role },
                     { name: { $regex: search, $options: "i" } },
@@ -57,7 +65,7 @@ class LecturerController {
                 .skip((page - 1) * limit)
                 .exec();
 
-            const count = await Lecturer.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();
+            const count = await Lecturer.find(queryRole).or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();
 
             res.status(200).json({
                 lecturers,
@@ -72,7 +80,7 @@ class LecturerController {
 
     // [POST] /user/account
     async createLecturer(req, res) {
-        const { userId, password, name, email } = req.body;
+        const { userId, password, name, email, role } = req.body;
         try {
             const lecturer = await Lecturer.create({ userId, password, name, email, role: 'LECTURER' });
 
