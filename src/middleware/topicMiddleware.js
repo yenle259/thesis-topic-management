@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../app/models/Lecturer');
 const Student = require('../app/models/Student');
+const Module = require('../app/models/Module');
 const PublishDate = require('../app/models/PublishDate');
 const Topic = require('../app/models/Topic');
 const constant = require('.././constants')
@@ -23,7 +24,7 @@ const isValidToRegister = async (req, res, next) => {
     const { studentId, topicId } = req.body;
     let errors = { student: '' };
 
-    const { type } = await Topic.findOne({ _id: topicId });
+    const { module } = await Topic.findOne({ _id: topicId });
     const student = await Student.findOne({ _id: studentId }).populate({
         path: 'registerModule',
         populate: { path: 'semester' }
@@ -32,7 +33,7 @@ const isValidToRegister = async (req, res, next) => {
     const moduleType = student.registerModule.find((module) => module.semester._id = constant.RECENT_SEMESTER_ID).moduleType;
 
     if (moduleType) {
-        if (moduleType.split('-').includes(type)) {
+        if (moduleType.split('-').includes(module.moduleId)) {
             next();
         } else {
             // errors.student = 'Đề tài sinh viên đăng ký không phù hợp với học phần của sinh viên'
@@ -49,7 +50,7 @@ const isValidToRegister = async (req, res, next) => {
 //check register module of student is suitable for register this topic with topicId in param
 const isValidToSuggest = async (req, res, next) => {
 
-    const { studentId, type } = req.body;
+    const { studentId, module } = req.body;
     let errors = { student: '' };
 
     const student = await Student.findOne({ _id: studentId }).populate({
@@ -58,9 +59,10 @@ const isValidToSuggest = async (req, res, next) => {
     })
     //get moduleType of recent semester
     const moduleType = student.registerModule.find((module) => module.semester._id = constant.RECENT_SEMESTER_ID).moduleType;
+    const moduleDoc = await Module.findOne({ _id: module });
 
     if (moduleType) {
-        if (moduleType.split('-').includes(type)) {
+        if (moduleType.includes(moduleDoc.moduleId)) {
             next();
         } else {
             // errors.student = 'Đề tài sinh viên đăng ký không phù hợp với học phần của sinh viên'

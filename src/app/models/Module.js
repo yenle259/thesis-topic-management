@@ -1,35 +1,27 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const User = require('./Lecturer');
 const Schema = mongoose.Schema;
-const slug = require('mongoose-slug-updater');
+const autopopulate = require('mongoose-autopopulate');
 
-const Topic = new Schema(
+const Module = new Schema(
     {
-        name: { type: String, maxLength: 255, required: [true, 'Topic name is required'] },
-        slug: { type: String, slug: 'name', unique: true },
-        pi: { type: Schema.Types.ObjectId, ref: 'Lecturer', required: [true, "PI is required"] },
-        description: { type: String, maxLength: 500 },
-        type: { type: String, enum: ['NLCS', 'NL', 'TL', 'LV',] },
-        numberOfStudent: { type: Number, default: 1 },
-        student: [{
-            studentInfo: { type: Schema.Types.ObjectId, ref: 'Student' },
-            status: { type: String, enum: ['APPROVE', 'REJECT', 'PENDING'] },
-            reason: { type: String, minlength: 15 },
-        }],
-        isDisplay: { type: Boolean, default: false },
-        status: { type: String, enum: ['SUGGESTED', 'CREATED'] },
-        semester: { type: Schema.Types.ObjectId, ref: 'SchoolYearSemester' },
+        name: { type: String, maxLength: 255, required: [true, 'Module name is required'] },
+        moduleId: {
+            type: String,
+            minLength: 5,
+            unique: [true, 'Module ID is unique'],
+            uppercase: true,
+            required: [true, 'Module ID is required']
+        }
     },
     { timestamps: true },
 );
 
 //fire a function after doc save to db
-Topic.post('save', function (doc, next) {
-    console.log('New topic was created and saved', doc);
+Module.post('save', function (doc, next) {
+    console.log('New module was created and saved', doc);
     next();
 })
 
 //Add plugins
-mongoose.plugin(slug);
-module.exports = mongoose.model('Topic', Topic);
+mongoose.plugin(autopopulate);
+module.exports = mongoose.model('Module', Module);

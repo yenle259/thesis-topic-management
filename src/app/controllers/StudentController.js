@@ -1,5 +1,6 @@
 const constant = require('../../constants')
 const Student = require('../models/Student');
+const Module = require('../models/Module');
 const bcrypt = require('bcrypt');
 
 //handle error if failed, err.code sth is undefined
@@ -69,9 +70,24 @@ class StudentController {
         //limit: item per page
         const { page, limit } = req.query;
         const search = req.query.search || "";
+        const module = req.query.module || '';
+
+        const modules = (await Module.find()).map((item) => (item.moduleId));
+
+        let queryString = {};
+
+        if (module === 'none') {
+            queryString = { '$and': [{ 'registerModule.moduleType': { "$nin": modules } }, { 'registerModule.moduleType': { $eq: '' } }] }
+        } else {
+            queryString['registerModule.moduleType'] = { $regex: module, $options: "i" }
+        }
+
         try {
             //options : i -> case sensitve
-            const students = await Student.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).populate({
+            const students = await Student.find(queryString).or([
+                { name: { $regex: search, $options: "i" } },
+                { userId: { $regex: search, $options: "i" } },
+            ]).populate({
                 path: 'registerModule',
                 populate: { path: 'semester' }
             }).sort({
@@ -81,7 +97,7 @@ class StudentController {
                 .skip((page - 1) * limit)
                 .exec();
 
-            const count = await Student.find().or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();;
+            const count = await Student.find(queryString).or([{ name: { $regex: search, $options: "i" } }, { userId: { $regex: search, $options: "i" } }]).countDocuments();;
 
             // return response with posts, total pages, and current page
             res.json({
@@ -91,7 +107,7 @@ class StudentController {
                 count
             });
         } catch (err) {
-            console.error(err.message);
+            console.error(err);
         }
     }
 

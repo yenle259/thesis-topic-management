@@ -118,7 +118,7 @@ class TopicController {
             }).catch(next)
     }
 
-    // [GET] /topic/student/:id
+    // [GET] /topic/student/:id -> get Topic that student registered
     async getTopicByStudentId(req, res, next) {
         try {
             const topics = await Topic.find({ 'student.studentInfo': req.params.id }).populate('pi').populate('semester');
@@ -131,9 +131,9 @@ class TopicController {
 
     // [POST] /topic --> Create a new topic with needed attribute 
     async create(req, res) {
-        const { name, pi, type, isDisplay, description, numberOfStudent, semester } = req.body;
+        const { name, pi, type, isDisplay, description, numberOfStudent, semester, module } = req.body;
         try {
-            const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent, semester });
+            const topic = await Topic.create({ name, pi, type, isDisplay, description, numberOfStudent, semester, module });
             res.status(201).json(topic);
         } catch (err) {
             const errors = handleErrors(err);
@@ -154,9 +154,9 @@ class TopicController {
 
     // [POST] /topic/suggest --> Create a new suggest topic
     async suggested(req, res) {
-        const { name, pi, type, description, studentId } = req.body;
+        const { name, pi, type, description, studentId, module } = req.body;
         const suggestedTopic = {
-            name, pi, type, description,
+            name, pi, description, module,
             student: { studentInfo: studentId, status: 'PENDING' },
             numberOfStudent: 1,
             status: 'SUGGESTED',
@@ -186,6 +186,7 @@ class TopicController {
     // [PUT] /topic/unregister/:slug --> remove student id from topic
     async removeStudentId(req, res, next) {
         const { studentId } = req.body;
+        
         Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: { studentInfo: studentId } } })
             .then((topic) => {
                 res.status(201).json(topic);
