@@ -34,15 +34,42 @@ const handleErrors = (err) => {
 class TopicController {
 
     // [GET] /topic --> get all topic
-    get(req, res, next) {
-        Topic.find({ isDisplay: true }).populate('pi').populate('semester').populate({
-            path: 'student',
-            populate: { path: 'studentInfo' }
-        })
-            .then((topics) => {
-                res.json(topics);
+    async get(req, res, next) {
+
+        const { page, limit } = req.query;
+        const module = req.query.module || '';
+
+        let queryString = {}
+        queryString['isDisplay'] = true;
+
+        if (module) {
+            queryString['module'] = module;
+        }
+        console.log(queryString)
+        try {
+            //options : i -> case sensitve
+            const topics = await Topic.find(queryString).populate('pi').populate('semester').populate({
+                path: 'student',
+                populate: { path: 'studentInfo' }
+            }).sort({
+                createdAt: 'desc'
             })
-            .catch(next);
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await Topic.find(queryString).countDocuments();;
+
+            // return response with posts, total pages, and current page
+            res.status(200).json({
+                topics,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     // [GET] /topic/page/:id --> get topic per page
@@ -65,7 +92,9 @@ class TopicController {
                 currentPage: Math.ceil(page / 1)
             });
         } catch (err) {
-            console.error(err.message);
+            console.error(err);
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 
@@ -83,26 +112,52 @@ class TopicController {
 
     // [GET] /topic/lecturer/:id
     async getTopicByLecturerId(req, res, next) {
-        const { status } = req.query;
+        const { page, limit } = req.query;
+        const semester = req.query.semester || "";
+        const module = req.query.module || '';
+        const status = req.query.status || '';
+
+        let queryString = {};
+
+        queryString['pi'] = req.params.id;
+
+        if (status) {
+            queryString['status'] = 'SUGGESTED';
+        }
+
+        if (module) {
+            queryString['module'] = module;
+        }
+
+        if (semester) {
+            queryString['semester'] = semester;
+        }
+
+        console.log(queryString);
+
         try {
-            const lecturer = await Lecturer.findOne({ _id: req.params.id })
-            if (status) {
-                const topics = await Topic.find({ pi: lecturer._id, status: 'SUGGESTED' }).populate('pi').populate('semester').populate({
-                    path: 'student',
-                    populate: { path: 'studentInfo' }
-                })
-                res.status(200).json({ topics });
-            } else {
-                const topics = await Topic.find({
-                    pi: lecturer._id
-                }).populate('pi').populate('semester').populate({
-                    path: 'student',
-                    populate: { path: 'studentInfo' }
-                })
-                res.status(200).json({ topics });
-            }
-        } catch (error) {
-            console.log(error)
+            const topics = await Topic.find(queryString).populate('pi').populate('semester').populate({
+                path: 'student',
+                populate: { path: 'studentInfo' }
+            }).sort({
+                createdAt: 'desc'
+            })
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await Topic.find(queryString).countDocuments();
+
+            res.status(200).json({
+                topics,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
+            });
+        } catch (err) {
+            console.error(err);
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 
@@ -116,6 +171,7 @@ class TopicController {
                     })
                     .catch(next);
             }).catch(next)
+
     }
 
     // [GET] /topic/student/:id -> get Topic that student registered
@@ -186,12 +242,25 @@ class TopicController {
     // [PUT] /topic/unregister/:slug --> remove student id from topic
     async removeStudentId(req, res, next) {
         const { studentId } = req.body;
-        
-        Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: { studentInfo: studentId } } })
-            .then((topic) => {
-                res.status(201).json(topic);
-            })
-            .catch(next);
+        try {
+            const topic = await Topic.findOne({ slug: req.params.slug });
+            const { status, numberOfStudent } = topic;
+            if (status === 'SUGGESTED' && numberOfStudent === 1) {
+                Topic.deleteOne({ slug: req.params.slug }).then((topic) => {
+                    res.status(200).json(topic);
+                })
+                    .catch(next);
+            } else {
+                Topic.findOneAndUpdate({ slug: req.params.slug }, { $pull: { student: { studentInfo: studentId } } })
+                    .then((topic) => {
+                        res.status(201).json(topic);
+                    })
+                    .catch(next);
+            }
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 
     // [PUT] /topic/review --> update status of register student

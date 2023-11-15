@@ -19,7 +19,7 @@ const handleErrors = (err) => {
     if (err.code === 11000) {
         errors.sysId = "Sys ID: " + err.writeErrors[0].err.op.sysId + " is existed"
     }
-    
+
     // if(Object.)
     return errors;
 }
@@ -27,12 +27,31 @@ const handleErrors = (err) => {
 class SchoolYearSemesterController {
 
     // [GET] /sys
-    getAll(req, res, next) {
-        const semesters = SchoolYearSemester.find().sort({  'schoolYear.beginAt': -1 })
-            .then((semesters) => {
-                res.status(200).json(semesters);
-            })
-            .catch(next);
+    async getAll(req, res, next) {
+        const isMain = req.query.isMain || '';
+        let query = {};
+
+        if (isMain) {
+            query = { semester: { "$ne": 3 } }
+        }
+
+        try {
+            const semesters = await SchoolYearSemester.find(query).sort({ 'schoolYear.beginAt': -1 })
+            res.status(200).json(semesters);
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+    // [GET] /sys/main =>get main semester
+    async getMain(req, res, next) {
+        try {
+            const semesters = await SchoolYearSemester.find({ semester: { '$in': [1, 2] } }).sort({ 'schoolYear.beginAt': -1 })
+            res.status(200).json(semesters);
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 
     // [POST] /sys/create
