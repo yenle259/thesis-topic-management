@@ -114,6 +114,42 @@ class LecturerController {
             res.status(400).json({ errors });
         }
     }
+
+    // [POST] /lecturer/account/import --> Create a list of lecturer by file import
+    async importAccount(req, res, next) {
+        try {
+            const data = req.body;
+            const accountData = data.map((lecturer) => {
+                const salt = bcrypt.genSaltSync();
+                const hash = bcrypt.hashSync(lecturer.password, salt)
+                return new Lecturer({
+                    userId: lecturer.userId,
+                    name: lecturer.name,
+                    password: hash ?? lecturer.password,
+                    email: lecturer.email,
+                    role: lecturer.role
+                })
+            }
+            )
+            const lecturers = await Lecturer.insertMany(accountData, { ordered: false })
+            res.status(200).json(lecturers);
+        } catch (err) {
+            console.log(err)
+            if (err.writeErrors) {
+                let errors = { userId: [] }
+                err.writeErrors.map((error) => {
+                    if (err.code === 11000) {
+                        errors.userId.push('MSCB: ' + error.err.op.userId + ' đã tồn tại\n')
+                    }
+                })
+                res.status(400).json({ errors });
+            } else {
+                const errors = handleErrors(err);
+                res.status(400).json({ errors });
+            }
+        }
+    }
+
 }
 
 module.exports = new LecturerController();

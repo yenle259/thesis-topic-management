@@ -133,19 +133,13 @@ class AuthController {
         }
     }
 
-    // [POST] /auth/student/signup
-    async createStudents(req, res) {
-        const { userId, password, name, email, moduleType } = req.body;
+    // [POST] /auth/lecturer/signup
+    async handleLecturerSignup(req, res) {
+        const { userId, password, name, email, role } = req.body;
         try {
-            const registerModule = {
-                semester: '6526d24c7547ab02d497a7a4',
-                moduleType
-            }
-            const student = await Student.create({ userId, password, name, email, registerModule });
+            const lecturer = await Lecturer.create({ userId, password, name, email, role });
 
-            res.status(201).json({ student: student._id });
-            const sys = await SchoolYearSemester.insertMany(data);
-            res.status(201).json(sys);
+            res.status(201).json({ lecturer: lecturer._id });
         } catch (err) {
             const errors = handleErrors(err);
             console.log(errors);

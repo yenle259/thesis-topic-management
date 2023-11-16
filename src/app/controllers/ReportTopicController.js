@@ -29,12 +29,39 @@ const handleErrors = (err) => {
 class ReportTopicController {
 
     // [GET] /report --> get all report topic
-    get(req, res, next) {
-        ReportTopic.find().populate('pi').populate('student').populate('topic')
-            .then((topics) => {
-                res.json(topics);
-            })
-            .catch(next);
+    async get(req, res, next) {
+        const { page, limit } = req.query;
+        const isReport = req.query.isReport || '';
+
+        let query = {};
+
+        if (isReport) {
+            query['topic.module.moduleId'] = { '$in': ['CT554', 'CT666'] }
+            console.log(query)
+        }
+        try {
+            // execute query with page and limit values
+            const topics = await ReportTopic.find(query).populate('pi').populate('student').populate('topic')
+                .sort({
+                    createdAt: 'desc'`
+                })
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await ReportTopic.find(query).count();
+
+            res.status(200).json({
+                topics,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
+            });
+        } catch (err) {
+            console.error(err);
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 
     // [GET] /report/lecturer/:id --> get students + pagination

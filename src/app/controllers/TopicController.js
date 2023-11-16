@@ -72,24 +72,15 @@ class TopicController {
         }
     }
 
-    // [GET] /topic/page/:id --> get topic per page
+    // [GET] /topic/find --> get topic per page
     async getPerPage(req, res, next) {
-        const { page, limit } = req.query;
+        let query = { 'module.moduleId': 'CT554' }
         try {
             // execute query with page and limit values
-            const topics = await Topic.find().populate('pi')
-                .limit(limit * 1)
-                .skip((page - 1) * limit)
-                .exec();
-
-            // get total documents in the Posts collection 
-            const count = await Topic.count();
-
-            // return response with posts, total pages, and current page
+            const topics = await Topic.find(query)
+            const count = await Topic.find(query).countDocuments();
             res.json({
-                topics,
-                totalPages: Math.ceil(count / limit),
-                currentPage: Math.ceil(page / 1)
+                count, topics,
             });
         } catch (err) {
             console.error(err);
