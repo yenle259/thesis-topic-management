@@ -43,7 +43,7 @@ class ReportTopicController {
             // execute query with page and limit values
             const topics = await ReportTopic.find(query).populate('pi').populate('student').populate('topic')
                 .sort({
-                    createdAt: 'desc'`
+                    createdAt: 'desc'
                 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit)
