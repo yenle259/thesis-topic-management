@@ -77,10 +77,13 @@ class TopicController {
         let query = { 'module.moduleId': 'CT554' }
         try {
             // execute query with page and limit values
-            const topics = await Topic.find(query)
-            const count = await Topic.find(query).countDocuments();
+            const topics = await Topic.find(query).populate({
+                path: 'student',
+                populate: { path: 'studentInfo', match: { _id: '65524b587d0c977551ed7a71' } }
+            })
             res.json({
-                count, topics,
+                count: topics.length,
+                topics,
             });
         } catch (err) {
             console.error(err);

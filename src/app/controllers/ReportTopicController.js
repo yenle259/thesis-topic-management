@@ -1,4 +1,5 @@
 const ReportTopic = require('../models/ReportTopic');
+const Topic = require('../models/Topic');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -36,12 +37,17 @@ class ReportTopicController {
         let query = {};
 
         if (isReport) {
-            query['topic.module.moduleId'] = { '$in': ['CT554', 'CT666'] }
-            console.log(query)
+            // query['module.moduleId'] = { '$in': ['CT554', 'CT666'] }
+            // console.log(query)
+            // query = { '$and': [{ 'student.status': 'APPROVE' }, { 'module': { $in: ['654fd85377f71c8576f9a339', '654fdb16d92399b3661be1ce'] } }] }
         }
+
         try {
             // execute query with page and limit values
-            const topics = await ReportTopic.find(query).populate('pi').populate('student').populate('topic')
+            const topics = await ReportTopic.find(query)
+                .populate({
+                    path: 'pi student topic'
+                })
                 .sort({
                     createdAt: 'desc'
                 })
@@ -51,12 +57,24 @@ class ReportTopicController {
 
             const count = await ReportTopic.find(query).count();
 
-            res.status(200).json({
-                topics,
-                totalPages: Math.ceil(count / limit),
-                currentPage: Math.ceil(page / 1),
-                count
-            });
+            if (isReport) {
+                const filterTopics = topics.filter(({ topic }) => ['CT554', 'CT666'].includes(topic.module.moduleId))
+                const length = filterTopics.length;
+                res.status(200).json({
+                    topics: filterTopics,
+                    totalPages: Math.ceil(length / limit),
+                    currentPage: Math.ceil(page / 1),
+                    count: length
+                });
+            } else {
+                res.status(200).json({
+                    topics,
+                    totalPages: Math.ceil(count / limit),
+                    currentPage: Math.ceil(page / 1),
+                    count
+                });
+            }
+
         } catch (err) {
             console.error(err);
             const errors = handleErrors(err);
