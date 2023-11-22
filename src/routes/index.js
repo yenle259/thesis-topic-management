@@ -9,11 +9,11 @@ const moduleRouter = require('./module');
 const { requireAuth } = require('../middleware/authMiddleware')
 
 function route(app) {
-    app.use('/module', moduleRouter);
-    app.use('/student', studentRouter);
+    app.use('/module', requireAuth, moduleRouter);
+    app.use('/student', requireAuth, studentRouter);
     app.use('/auth', authRouter);
-    app.use('/sys', sysRouter);
-    app.use('/report', reportRouter);
+    app.use('/sys', requireAuth, sysRouter);
+    app.use('/report', requireAuth, reportRouter);
     app.use('/topic', requireAuth, topicRouter);
     app.use('/user', requireAuth, lecturerRouter);
     app.use('/', siteRouter);

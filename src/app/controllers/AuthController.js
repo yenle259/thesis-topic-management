@@ -34,7 +34,7 @@ const handleErrors = (err) => {
     }
     return errors;
 }
-
+//second - 3 days
 const maxAge = 3 * 24 * 60 * 60;
 
 const createToken = (id) => {

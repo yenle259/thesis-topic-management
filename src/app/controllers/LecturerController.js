@@ -55,7 +55,6 @@ class LecturerController {
         try {
             const lecturers = await Lecturer.find(queryRole)
                 .or([
-                    { 'role': role },
                     { name: { $regex: search, $options: "i" } },
                     { userId: { $regex: search, $options: "i" } }])
                 .sort({
