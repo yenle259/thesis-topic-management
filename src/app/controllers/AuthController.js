@@ -17,12 +17,12 @@ const handleErrors = (err) => {
 
     //invalid user
     if (err.message.includes('Invalid User ID')) {
-        errors.userId = "Mã số định danh không tồn tại";
+        errors.userId = "Mã số người dùng không tồn tại";
     }
 
     //invalid user
     if (err.message.includes('Incorrect password')) {
-        errors.password = "Mật khẩu không chính xác";
+        errors.password = "Mật khẩu người dùng không chính xác";
     }
 
     //invalid user

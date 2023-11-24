@@ -1,9 +1,11 @@
-const PublishDate = require('../models/PublishDate');
-const Student = require('../models/Student');
 const Topic = require('../models/Topic');
 const Lecturer = require('../models/Lecturer');
 const ReportTopic = require('../models/ReportTopic');
-const constant = require('../../constants')
+const constant = require('../../constants');
+
+const nodemailer = require('nodemailer');
+const { reviewEmailMessageHtml } = require('../../utils/reviewEmailMessageHtml')
+const { getSemesterBySysId } = require('../../utils/getSemesterBySysId')
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -30,6 +32,14 @@ const handleErrors = (err) => {
     }
     return errors;
 }
+
+const transporter = nodemailer.createTransport({ // config mail server
+    service: 'Gmail',
+    auth: {
+        user: 'htqldt@gmail.com',
+        pass: 'xewy omrj tars ywkv'
+    }
+});
 
 class TopicController {
 
@@ -225,7 +235,20 @@ class TopicController {
     async register(req, res, next) {
         try {
             const { studentId, topicId } = req.body;
-            const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: { studentInfo: studentId, status: 'PENDING' } } })
+            const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: { studentInfo: studentId, status: 'PENDING' } } }, { new: true }).populate('pi semester')
+
+            // if (topic) {
+            //     const { name, pi, semester, module } = topic;
+            //     const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
+            //         from: 'Hệ thống quản lý đề tài',
+            //         to: 'yenb1910335@student.ctu.edu.vn',
+            //         subject: 'ĐĂNG KÝ ĐỀ TÀI THÀNH CÔNG',
+            //         html: emailMessageHtml(topic.name, topic.slug, pi.name, module.moduleId + ' | ' + module.name, getSemesterBySysId(semester.sysId), 'Đang chờ duyệt')
+            //     }
+
+            //     transporter.sendMail(emailMessage).then(console.log).catch(console.error);
+            // }
+
             res.status(201).json({ topic });
         } catch (err) {
             const errors = handleErrors(err);
@@ -266,10 +289,30 @@ class TopicController {
                     'student.$.status': status,
                     'student.$.reason': reason,
                 }
-            });
+            }).populate('pi');
+
+            const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
+                from: 'Hệ thống quản lý đề tài',
+                to: 'yenb1910335@student.ctu.edu.vn',
+                subject: 'Đề tài đã được phê duyệt',
+                html: reviewEmailMessageHtml(topic.name, topic.slug, topic.pi.name, status)
+            }
+
+            transporter.sendMail(emailMessage).then(console.log).catch(console.error);
 
             if (status === 'APPROVE') {
-                const reportTopic = await ReportTopic.create({ pi: topic.pi._id, student: studentId, topic: topic._id, isReport: false });
+                const reportTopic = (await ReportTopic.create({ pi: topic.pi._id, student: studentId, topic: topic._id, isReport: false })).populate('pi topic');
+                // if (reportTopic) {
+                //     const emailMessage = { 
+                //         from: 'Hệ thống quản lý đề tài',
+                //         to: 'yenb1910335@student.ctu.edu.vn',
+                //         subject: 'Đề tài đã được phê duyệt',
+                //         html: reviewEmailMessageHtml(topic.name, topic.slug, topic.pi.name, status)
+                //     }
+
+                //     transporter.sendMail(emailMessage).then(console.log).catch(console.error);
+                // }
+
                 res.status(201).json({ topic, reportTopic });
 
             } else {
