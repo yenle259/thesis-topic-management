@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const PublishDate = new Schema(
     {
-        publishDate: { type: Date, required: [true, 'Public date is required'] }
+        publishDate: { type: Date, required: [true, 'Public date is required'] },
     }
 );
 
