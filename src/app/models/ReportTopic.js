@@ -6,7 +6,10 @@ const ReportTopic = new Schema(
         pi: { type: Schema.Types.ObjectId, ref: 'Lecturer', required: [true, "PI is required"] },
         student: { type: Schema.Types.ObjectId, ref: 'Student', required: [true, "Student is required"] },
         topic: { type: Schema.Types.ObjectId, ref: 'Topic', required: [true, "Topic is required"] },
-        isReport: { type: Boolean }
+        reportStatus: {
+            studentRegister: { type: String, enum: ['REPORT', 'POSTPONE'] },
+            piConfirm: { type: Boolean },
+        }
     },
     { timestamps: true },
 );

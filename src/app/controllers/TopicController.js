@@ -1,11 +1,14 @@
 const Topic = require('../models/Topic');
 const Lecturer = require('../models/Lecturer');
+const Student = require('../models/Student');
 const ReportTopic = require('../models/ReportTopic');
 const constant = require('../../constants');
+const jwt = require('jsonwebtoken');
 
 const nodemailer = require('nodemailer');
 const { reviewEmailMessageHtml } = require('../../utils/reviewEmailMessageHtml')
-const { getSemesterBySysId } = require('../../utils/getSemesterBySysId')
+const { getSemesterBySysId } = require('../../utils/getSemesterBySysId');
+const { checkRegisterTopicTime } = require('../../middleware/topicMiddleware');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -103,15 +106,32 @@ class TopicController {
     }
 
     // [GET] /topic/:slug --> get topic by slug
-    getTopicBySlug(req, res, next) {
-        Topic.find({ slug: req.params.slug }).populate('pi').populate('semester').populate({
+    async getTopicBySlug(req, res, next) {
+        const token = req.cookies.access_token;
+        let currentUserId;
+        if (token) {
+            jwt.verify(token, constant.TOKEN_SECRET, async (error, decodedToken) => {
+                if (error) {
+                    console.log(error);
+                } else {
+                    currentUserId = decodedToken.id;
+                }
+            })
+        }
+        Topic.findOne({ slug: req.params.slug }).populate('pi semester').populate({
             path: 'student',
             populate: { path: 'studentInfo' }
         })
             .then((topic) => {
-                res.status(201).json(topic);
-            })
-            .catch(next);
+                ReportTopic.findOne({ topic: topic._id, student: currentUserId })
+                    .then((report) => {
+                        res.json({
+                            topic,
+                            reportStatus: report ? report.reportStatus : ''
+                        });
+                    })
+                    .catch(next);
+            }).catch(next);
     }
 
     // [GET] /topic/lecturer/:id
@@ -181,7 +201,10 @@ class TopicController {
     // [GET] /topic/student/:id -> get Topic that student registered
     async getTopicByStudentId(req, res, next) {
         try {
-            const topics = await Topic.find({ 'student.studentInfo': req.params.id }).populate('pi').populate('semester');
+            const topics = await Topic.find({ 'student.studentInfo': req.params.id }).populate('pi semester').populate({
+                path: 'student',
+                populate: { path: 'studentInfo' }
+            });
             res.status(201).json(topics);
         } catch (err) {
             const errors = handleErrors(err);
@@ -234,9 +257,10 @@ class TopicController {
     // [POST] /topic/register --> register a student to a Lecturer's topic
     async register(req, res, next) {
         try {
+
             const { studentId, topicId } = req.body;
             const topic = await Topic.findOneAndUpdate({ _id: topicId }, { $addToSet: { student: { studentInfo: studentId, status: 'PENDING' } } }, { new: true }).populate('pi semester')
-
+            res.status(201).json({ topic });
             // if (topic) {
             //     const { name, pi, semester, module } = topic;
             //     const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
@@ -249,7 +273,6 @@ class TopicController {
             //     transporter.sendMail(emailMessage).then(console.log).catch(console.error);
             // }
 
-            res.status(201).json({ topic });
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });

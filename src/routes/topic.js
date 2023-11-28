@@ -2,11 +2,11 @@ var express = require('express');
 var router = express.Router();
 
 const topicController = require('../app/controllers/TopicController');
-const { checkPublishDate, isValidToRegister, isValidToSuggest} = require('../middleware/topicMiddleware');
+const { checkRegisterTopicTime, isValidToRegister, isValidToSuggest } = require('../middleware/topicMiddleware');
 
 router.post('/suggest', isValidToSuggest, topicController.suggested);
 router.put('/review', topicController.review);
-router.post('/register', isValidToRegister, topicController.register);
+router.post('/register', checkRegisterTopicTime, isValidToRegister, topicController.register);
 
 router.put('/update/:id', topicController.update);
 router.get('/student/:id', topicController.getTopicByStudentId);

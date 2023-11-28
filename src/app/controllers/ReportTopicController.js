@@ -118,6 +118,21 @@ class ReportTopicController {
         }
     }
 
+    // [PUT] /report/register --> student register report topic of mine 
+    async registerReport(req, res, next) {
+        try {
+            const { status, topicId } = req.body;
+            const reportTopic = await ReportTopic.findOneAndUpdate({ topic: topicId },
+                { reportStatus: { studentRegister: status, piConfirm: false } }, { new: true })
+                .populate('pi')
+
+            res.status(201).json({ reportTopic });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
 }
 
 module.exports = new ReportTopicController();

@@ -15,7 +15,7 @@ const Lecturer = new Schema(
         name: { type: String, maxLength: 255 },
         email: { type: String, maxLength: 255 },
         phone: { type: String, maxLength: 50 },
-        role: { type: String, enum: ['LECTURER', 'ADMIN'] },
+        role: { type: String, enum: ['LECTURER', 'ADMIN'], default: 'LECTURER' },
         password: {
             type: String,
             minLength: [8, 'Password must have more than 8 characters'],

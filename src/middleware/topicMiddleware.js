@@ -1,26 +1,36 @@
-const jwt = require('jsonwebtoken');
-const User = require('../app/models/Lecturer');
+const Manage = require('../app/models/Manage');
 const Student = require('../app/models/Student');
 const Module = require('../app/models/Module');
-const PublishDate = require('../app/models/PublishDate');
 const Topic = require('../app/models/Topic');
+
+const { isOpenForRegister } = require('.././utils/isOpenForRegister')
 const constant = require('.././constants')
+const { isBefore } = require('date-fns')
 
-const checkPublishDate = async (req, res, next) => {
+const checkRegisterTopicTime = async (req, res, next) => {
+    let errors = { registerTime: '' };
 
-    const { publishDate } = await PublishDate.findOne();
-    const recentDate = new Date(Date.now());
+    const { registerTopicTime } = await Manage.findOne();
+    const isRegisterTopicTime = isOpenForRegister(registerTopicTime.beginAt, registerTopicTime.endAt);
+    if (isRegisterTopicTime) {
+        next();
+    } else {
+        if (isBefore(new Date(Date.now()),
+            new Date(registerTopicTime.beginAt))) {
 
-    if (new Date(publishDate.publishDate) > recentDate) {
-        let errors = { publishDate: '' };
-        errors.publishDate = 'Topic is not publish yet';
-        res.status(500).json({ errors })
+            errors.registerTime = 'Chưa đến thời gian đăng ký đề tài';
+            res.status(400).json({ errors })
+            return;
+        } else {
+            errors.registerTime = 'Thời gian đăng ký đề tài đã kết thúc';
+            res.status(400).json({ errors });
+            return;
+        }
     }
 }
 
 //check register module of student is suitable for register this topic with topicId in param
 const isValidToRegister = async (req, res, next) => {
-
     const { studentId, topicId } = req.body;
     let errors = { student: '' };
 
@@ -76,4 +86,4 @@ const isValidToSuggest = async (req, res, next) => {
 
 }
 
-module.exports = { checkPublishDate, isValidToRegister, isValidToSuggest }
+module.exports = { isValidToRegister, isValidToSuggest, checkRegisterTopicTime }
