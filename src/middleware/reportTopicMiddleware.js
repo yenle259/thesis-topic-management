@@ -2,16 +2,29 @@ const Manage = require('../app/models/Manage');
 const Student = require('../app/models/Student');
 const Topic = require('../app/models/Topic');
 const constant = require('../constants')
+const { isOpenForRegister } = require('.././utils/isOpenForRegister')
+const { isBefore } = require('date-fns')
 
 const checkRegisterReportTime = async (req, res, next) => {
+    let errors = { registerTime: '' };
 
-    const { registerTopicTime } = await Manage.findOne();
-    const isRegisterTopicTime = isOpenForRegister(registerTopicTime.beginAt, registerTopicTime.endAt);
+    const { registerReportTime } = await Manage.findOne();
+    const isRegisterReportTime = isOpenForRegister(registerReportTime.beginAt, registerReportTime.endAt);
 
-    if (isRegisterTopicTime) {
-        let errors = { registerTime: '' };
-        errors.registerTime = 'Chưa đến thời gian đăng ký đề tài';
-        res.status(500).json({ errors })
+    if (isRegisterReportTime) {
+        next();
+    } else {
+        if (isBefore(new Date(Date.now()),
+            new Date(registerReportTime.beginAt))) {
+
+            errors.registerTime = 'Chưa đến thời gian đăng ký báo cáo';
+            res.status(400).json({ errors })
+            return;
+        } else {
+            errors.registerTime = 'Thời gian đăng ký báo cáo đã kết thúc';
+            res.status(400).json({ errors });
+            return;
+        }
     }
 }
 
@@ -45,4 +58,4 @@ const isValidToRegister = async (req, res, next) => {
 }
 
 
-module.exports = { isValidToRegister, isValidToSuggest }
+module.exports = { isValidToRegister, checkRegisterReportTime }

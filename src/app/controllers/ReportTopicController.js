@@ -33,13 +33,13 @@ class ReportTopicController {
     async get(req, res, next) {
         const { page, limit } = req.query;
         const isReport = req.query.isReport || '';
+        const reportStatus = req.query.reportStatus || '';
 
         let query = {};
 
-        if (isReport) {
-            // query['module.moduleId'] = { '$in': ['CT554', 'CT666'] }
-            // console.log(query)
-            // query = { '$and': [{ 'student.status': 'APPROVE' }, { 'module': { $in: ['654fd85377f71c8576f9a339', '654fdb16d92399b3661be1ce'] } }] }
+        if (reportStatus) {
+            query['reportStatus.studentRegister'] = reportStatus;
+            query['reportStatus.piConfirm'] = 'APPROVE'
         }
 
         try {

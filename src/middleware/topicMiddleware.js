@@ -2,9 +2,9 @@ const Manage = require('../app/models/Manage');
 const Student = require('../app/models/Student');
 const Module = require('../app/models/Module');
 const Topic = require('../app/models/Topic');
+const constant = require('.././constants')
 
 const { isOpenForRegister } = require('.././utils/isOpenForRegister')
-const constant = require('.././constants')
 const { isBefore } = require('date-fns')
 
 const checkRegisterTopicTime = async (req, res, next) => {
