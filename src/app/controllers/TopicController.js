@@ -125,25 +125,22 @@ class TopicController {
             path: 'student',
             populate: { path: 'studentInfo' }
         })
-            .then((topic) => {
+            .then(async (topic) => {
+                let reports = [];
                 query['topic'] = topic._id;
 
                 if (topic.pi._id == currentUserId) {
                     query['pi'] = currentUserId;
+                    reports = await ReportTopic.find(query).populate('student', 'name');
                 } else {
                     query['student'] = currentUserId;
+                    reports = await ReportTopic.find(query).populate('student', 'name');
                 }
+                res.status(200).json({
+                    topic,
+                    reports: reports ?? null,
+                });
 
-                //query with topicId of topic and piId or studentId
-                ReportTopic.findOne(query)
-                    .then((report) => {
-                        
-                        res.status(200).json({
-                            topic,
-                            reportStatus: report ? report.reportStatus : null,
-                        });
-                    })
-                    .catch(next);
             }).catch(next);
     }
 
