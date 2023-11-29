@@ -8,7 +8,7 @@ const ReportTopic = new Schema(
         topic: { type: Schema.Types.ObjectId, ref: 'Topic', required: [true, "Topic is required"] },
         reportStatus: {
             studentRegister: { type: String, enum: ['REPORT', 'POSTPONE'] },
-            piConfirm: { type: Boolean },
+            piConfirm: { type: String, enum: ['APPROVE', 'REJECT', 'PENDING'] },
         }
     },
     { timestamps: true },

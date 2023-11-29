@@ -49,7 +49,7 @@ class ReportTopicController {
                     path: 'pi student topic'
                 })
                 .sort({
-                    createdAt: 'desc'
+                    createdAt: 'desc',
                 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit)
@@ -86,7 +86,10 @@ class ReportTopicController {
     async getReportByLecturerId(req, res, next) {
         //limit: item per page
         try {
-            const topics = await ReportTopic.find({ 'pi': req.params.id }).populate('pi').populate('student').populate('topic')
+            const topics = await ReportTopic.find({ 'pi': req.params.id }).populate('pi student').populate({
+                path: 'topic',
+                populate: { path: 'semester' }
+            })
                 .sort({ createdAt: '-1' })
             const total = await ReportTopic.find({ 'pi': req.params.id }).countDocuments();
 
@@ -120,12 +123,26 @@ class ReportTopicController {
 
     // [PUT] /report/register --> student register report topic of mine 
     async registerReport(req, res, next) {
+
+        const { status, topicId, studentId } = req.body;
         try {
-            const { status, topicId } = req.body;
-            const reportTopic = await ReportTopic.findOneAndUpdate({ topic: topicId },
-                { reportStatus: { studentRegister: status, piConfirm: false } }, { new: true })
+            const reportTopic = await ReportTopic.findOneAndUpdate({ topic: topicId, student: studentId },
+                { reportStatus: { studentRegister: status, piConfirm: 'PENDING' } }, { new: true })
                 .populate('pi')
 
+            res.status(201).json({ reportTopic });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [PUT] /report/review --> student register report topic of mine 
+    async reviewRegisterReport(req, res, next) {
+        try {
+            const { piConfirm, topicId } = req.body;
+            const reportTopic = await ReportTopic.findOneAndUpdate({ _id: topicId },
+                { 'reportStatus.piConfirm': piConfirm }, { new: true })
             res.status(201).json({ reportTopic });
         } catch (err) {
             const errors = handleErrors(err);

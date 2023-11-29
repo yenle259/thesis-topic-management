@@ -109,6 +109,8 @@ class TopicController {
     async getTopicBySlug(req, res, next) {
         const token = req.cookies.access_token;
         let currentUserId;
+        let query = {}
+
         if (token) {
             jwt.verify(token, constant.TOKEN_SECRET, async (error, decodedToken) => {
                 if (error) {
@@ -118,16 +120,27 @@ class TopicController {
                 }
             })
         }
+
         Topic.findOne({ slug: req.params.slug }).populate('pi semester').populate({
             path: 'student',
             populate: { path: 'studentInfo' }
         })
             .then((topic) => {
-                ReportTopic.findOne({ topic: topic._id, student: currentUserId })
+                query['topic'] = topic._id;
+
+                if (topic.pi._id == currentUserId) {
+                    query['pi'] = currentUserId;
+                } else {
+                    query['student'] = currentUserId;
+                }
+
+                //query with topicId of topic and piId or studentId
+                ReportTopic.findOne(query)
                     .then((report) => {
-                        res.json({
+                        
+                        res.status(200).json({
                             topic,
-                            reportStatus: report ? report.reportStatus : ''
+                            reportStatus: report ? report.reportStatus : null,
                         });
                     })
                     .catch(next);

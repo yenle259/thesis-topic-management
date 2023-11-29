@@ -3,6 +3,7 @@ var router = express.Router();
 
 const reportController = require('../app/controllers/ReportTopicController');
 
+router.put('/review', reportController.reviewRegisterReport);
 router.put('/register', reportController.registerReport);
 
 router.get('/student/:id', reportController.getReportOfStudent);
