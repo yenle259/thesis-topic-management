@@ -85,23 +85,41 @@ class TopicController {
         }
     }
 
-    // [GET] /topic/find --> get topic per page
-    async getPerPage(req, res, next) {
-        let query = { 'module.moduleId': 'CT554' }
+    // [GET] /topic/reported --> get all reported topic for student review
+    async getTopics(req, res, next) {
+
+        const { page, limit } = req.query;
+        const module = req.query.module || '';
+
+        let queryString = {}
+
+        if (module) {
+            queryString['module'] = module;
+        }
+        console.log(queryString)
         try {
-            // execute query with page and limit values
-            const topics = await Topic.find(query).populate({
+            //options : i -> case sensitve
+            const topics = await Topic.find(queryString).populate('pi').populate('semester').populate({
                 path: 'student',
-                populate: { path: 'studentInfo', match: { _id: '65524b587d0c977551ed7a71' } }
+                populate: { path: 'studentInfo' }
+            }).sort({
+                createdAt: 'desc'
             })
-            res.json({
-                count: topics.length,
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await Topic.find(queryString).countDocuments();;
+
+            // return response with posts, total pages, and current page
+            res.status(200).json({
                 topics,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
             });
         } catch (err) {
             console.error(err);
-            const errors = handleErrors(err);
-            res.status(400).json({ errors });
         }
     }
 

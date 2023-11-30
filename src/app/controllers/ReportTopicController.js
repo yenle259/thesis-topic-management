@@ -82,6 +82,44 @@ class ReportTopicController {
         }
     }
 
+    // [GET] C --> get all reported topic for student review
+    async getReported(req, res, next) {
+
+        const { page, limit } = req.query;
+        const piId = req.query.piId || '';
+
+        let queryString = {}
+
+        if (piId) {
+            queryString['pi'] = piId;
+        }
+
+        try {
+            //options : i -> case sensitve
+            const topics = await ReportTopic.find(queryString).populate('pi semester topic').populate({
+                path: 'student',
+                populate: { path: 'studentInfo' }
+            }).sort({
+                createdAt: 'desc'
+            })
+                .limit(limit * 1)
+                .skip((page - 1) * limit)
+                .exec();
+
+            const count = await ReportTopic.find(queryString).countDocuments();;
+
+            // return response with posts, total pages, and current page
+            res.status(200).json({
+                topics,
+                totalPages: Math.ceil(count / limit),
+                currentPage: Math.ceil(page / 1),
+                count
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     // [GET] /report/lecturer/:id --> get students + pagination
     async getReportByLecturerId(req, res, next) {
         //limit: item per page

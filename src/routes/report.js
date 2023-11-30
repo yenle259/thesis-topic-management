@@ -9,6 +9,8 @@ router.put('/register', checkRegisterReportTime, reportController.registerReport
 
 router.get('/student/:id', reportController.getReportOfStudent);
 router.get('/lecturer/:id', reportController.getReportByLecturerId);
+
+router.get('/reported', reportController.getReported);
 router.get('/', reportController.get);
 
 module.exports = router;

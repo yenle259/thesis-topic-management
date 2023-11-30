@@ -13,7 +13,6 @@ router.get('/student/:id', topicController.getTopicByStudentId);
 router.get('/lecturerUserId/:id', topicController.getTopicByLecturerUserId);
 router.get('/lecturer/:id', topicController.getTopicByLecturerId);
 router.put('/unregister/:slug', topicController.removeStudentId);
-router.get('/find', topicController.getPerPage);
 
 router.delete('/:id', topicController.deleteTopic);
 router.get('/:slug', topicController.getTopicBySlug);
