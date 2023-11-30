@@ -7,8 +7,6 @@ const jwt = require('jsonwebtoken');
 
 const nodemailer = require('nodemailer');
 const { reviewEmailMessageHtml } = require('../../utils/reviewEmailMessageHtml')
-const { getSemesterBySysId } = require('../../utils/getSemesterBySysId');
-const { checkRegisterTopicTime } = require('../../middleware/topicMiddleware');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -215,13 +213,32 @@ class TopicController {
 
     // [GET] /topic/lecturerUserId/:id
     getTopicByLecturerUserId(req, res, next) {
+        const { page, limit } = req.query;
+
         Lecturer.findOne({ userId: req.params.id })
-            .then((lecturer) => {
-                Topic.find({ pi: lecturer.id, isDisplay: true }).populate('pi').populate('student').populate('semester')
-                    .then((topics) => {
-                        res.json(topics);
-                    })
-                    .catch(next);
+            .then(async (lecturer) => {
+                try {
+                    //options : i -> case sensitve
+                    const topics = await Topic.find({ pi: lecturer.id, isDisplay: true }).populate('pi semester student')
+                        .sort({
+                            createdAt: 'desc'
+                        })
+                        .limit(limit * 1)
+                        .skip((page - 1) * limit)
+                        .exec();
+
+                    const count = await Topic.find({ pi: lecturer.id, isDisplay: true }).countDocuments();;
+
+                    // return response with posts, total pages, and current page
+                    res.status(200).json({
+                        topics,
+                        totalPages: Math.ceil(count / limit),
+                        currentPage: Math.ceil(page / 1),
+                        count
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
             }).catch(next)
 
     }

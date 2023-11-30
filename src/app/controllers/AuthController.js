@@ -2,7 +2,20 @@ const Lecturer = require('../models/Lecturer');
 const Student = require('../models/Student');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+const generator = require('generate-password');
+
+const { resetPasswordEmailMessage } = require('../../utils/resetPasswordEmailMessage')
+
+//transporter to send mail
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({ // config mail server
+    service: 'Gmail',
+    auth: {
+        user: 'htqldt@gmail.com',
+        pass: 'xewy omrj tars ywkv'
+    }
+});
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -157,6 +170,60 @@ class AuthController {
         } catch (err) {
             const errors = handleErrors(err);
             console.log(errors);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [GET] /auth/reset/:userId -> get Infomation of user by userId
+    async getUserInfoByUserId(req, res, next) {
+        const userId = req.params.id;
+        console.log(userId)
+
+        let user;
+        try {
+            user = await Student.findOne({ userId });
+            if (!user) {
+                user = await Lecturer.findOne({ userId });
+            }
+            console.log(user)
+            res.status(201).json({ user });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
+    // [PUT] /auth/reset -> get Infomation of user by userId
+    async resetPassword(req, res, next) {
+        const userId = req.params.id;
+        let user;
+        try {
+            const newPassword = generator.generate({
+                length: 10,
+                numbers: true,
+            });
+            const salt = bcrypt.genSaltSync();
+            const hashPassword = bcrypt.hashSync(newPassword, salt);
+
+            user = await Student.findOneAndUpdate({ userId }, { password: hashPassword });
+
+            if (!user) {
+                user = await Lecturer.findOne({ userId }, { password: hashPassword });
+            }
+
+            if (user) {
+                const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
+                    from: 'Hệ thống quản lý đề tài',
+                    to: 'yenb1910335@student.ctu.edu.vn',
+                    subject: 'Reset mật khẩu tài khoản người dùng',
+                    html: resetPasswordEmailMessage(userId, newPassword)
+                }
+
+                transporter.sendMail(emailMessage).then(console.log).catch(console.error);
+            }
+            res.status(201).json({ statusCode: 200, message: 'Cập nhật mật khẩu cho người dùng thành công' });
+        } catch (err) {
+            const errors = handleErrors(err);
             res.status(400).json({ errors });
         }
     }
