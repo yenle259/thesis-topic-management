@@ -52,10 +52,12 @@ class TopicController {
 
         let queryString = {}
         queryString['isDisplay'] = true;
+        queryString['semester'] = '6526d24c7547ab02d497a7a4';
 
         if (module) {
             queryString['module'] = module;
         }
+
         console.log(queryString)
         try {
             //options : i -> case sensitve

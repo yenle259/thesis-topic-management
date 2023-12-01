@@ -228,6 +228,27 @@ class AuthController {
         }
     }
 
+    // [PUT] /auth/update -> get Infomation of user by userId
+    async updatePassword(req, res, next) {
+        const { userId, newPassword } = req.body;
+        let user;
+        try {
+            const salt = bcrypt.genSaltSync();
+            const hashPassword = bcrypt.hashSync(newPassword, salt);
+
+            user = await Student.findOneAndUpdate({ userId }, { password: hashPassword });
+
+            if (!user) {
+                user = await Lecturer.findOne({ userId }, { password: hashPassword });
+            }
+
+            res.status(200).json({message: 'Cập nhật mật khẩu cho người dùng thành công' });
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
+    }
+
 }
 
 module.exports = new AuthController();
