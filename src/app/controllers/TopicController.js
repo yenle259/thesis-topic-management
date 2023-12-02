@@ -354,10 +354,11 @@ class TopicController {
     async review(req, res, next) {
         try {
             const { topicIndex, status, reason, studentId } = req.body;
+
             const topic = await Topic.findOneAndUpdate({ 'student._id': topicIndex }, {
                 '$set': {
                     'student.$.status': status,
-                    'student.$.reason': reason,
+                    'student.$.reason': status === 'REJECT' ? reason : '',
                 }
             }).populate('pi');
 
