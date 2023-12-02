@@ -213,6 +213,44 @@ class StudentController {
         }
     }
 
+    async importAccountWithoutHashPw(req, res, next) {
+        try {
+            const data = req.body;
+            const accountData = data.map((student) => {
+                return new Student({
+                    userId: student.userId,
+                    name: student.name,
+                    password: student.password,
+                    email: student.email,
+                    registerModule: [
+                        {
+                            semester: '6526d24c7547ab02d497a7a4',
+                            moduleType: student.moduleType ?? ''
+                        }
+                    ]
+                })
+            }
+            )
+            const students = await Student.insertMany(accountData, { ordered: false })
+            res.status(200).json(students);
+        } catch (err) {
+            console.log(err)
+            if (err.writeErrors) {
+                let errors = { userId: [] }
+                err.writeErrors.map((error) => {
+                    if (err.code === 11000) {
+                        // errors.userId.push('MSSV: ' + error.err.op.userId + ' đã tồn tại\n')
+                        errors.userId = 'MSSV: ' + error.err.op.userId + ' đã tồn tại\n';
+                    }
+                })
+                res.status(400).json({ errors });
+            } else {
+                const errors = handleErrors(err);
+                res.status(400).json({ errors });
+            }
+        }
+    }
+
     // [DELETE] /student/:id --> delete student by id
     async deleteStudent(req, res, next) {
         Student.findByIdAndRemove({ _id: req.params.id })

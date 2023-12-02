@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const generator = require('generate-password');
 
 const { resetPasswordEmailMessage } = require('../../utils/resetPasswordEmailMessage')
+const { createNewAccount } = require('../../utils/createNewAccount')
 
 //transporter to send mail
 const nodemailer = require('nodemailer');
@@ -25,7 +26,7 @@ const handleErrors = (err) => {
 
     //duplicate err code 11000
     if (err.code === 11000) {
-        errors.userId = "User ID is already existed"
+        errors.userId = "Mã số người dùng đã tồn tại"
     }
 
     //invalid user
@@ -132,11 +133,26 @@ class AuthController {
     async handleStudentSignup(req, res) {
         const { userId, password, name, email, moduleType } = req.body;
         try {
+            const newPassword = generator.generate({
+                length: 10,
+                numbers: true,
+            });
+
             const registerModule = {
                 semester: '6526d24c7547ab02d497a7a4',
                 moduleType
             }
-            const student = await Student.create({ userId, password, name, email, registerModule });
+            const student = await Student.create({ userId, password: newPassword, name, email, registerModule });
+
+            if (student) {
+                const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
+                    from: 'Hệ thống quản lý đề tài',
+                    to: 'yenb1910335@student.ctu.edu.vn',
+                    subject: 'Thông tin tài khoản',
+                    html: createNewAccount(userId, newPassword)
+                }
+                transporter.sendMail(emailMessage).then(console.log).catch(console.error);
+            };
 
             res.status(201).json({ student: student._id });
         } catch (err) {
@@ -148,19 +164,37 @@ class AuthController {
 
     // [POST] /auth/lecturer/signup
     async handleLecturerSignup(req, res) {
-        const { userId, password, name, email, role } = req.body;
+        const { userId, name, email, role } = req.body;
+
         try {
-            const lecturer = await Lecturer.create({ userId, password, name, email, role });
+            const newPassword = generator.generate({
+                length: 10,
+                numbers: true,
+            });
+
+            const lecturer = await Lecturer.create({ userId, password: newPassword, name, email, role });
+
+            if (lecturer) {
+                const emailMessage = { // thiết lập đối tượng, nội dung gửi mail
+                    from: 'Hệ thống quản lý đề tài',
+                    to: 'yenb1910335@student.ctu.edu.vn',
+                    subject: 'Thông tin tài khoản',
+                    html: createNewAccount(userId, newPassword)
+                }
+
+                transporter.sendMail(emailMessage).then(console.log).catch(console.error);
+            }
+
 
             res.status(201).json({ lecturer: lecturer._id });
         } catch (err) {
+            console.log(err);
             const errors = handleErrors(err);
-            console.log(errors);
             res.status(400).json({ errors });
         }
     }
 
-    // [POST] /auth/lecturer/signup
+    // [POST] /auth/signup
     async handleUserSignup(req, res) {
         const { userId, password, name, email, role } = req.body;
         try {
@@ -242,7 +276,7 @@ class AuthController {
                 user = await Lecturer.findOne({ userId }, { password: hashPassword });
             }
 
-            res.status(200).json({message: 'Cập nhật mật khẩu cho người dùng thành công' });
+            res.status(200).json({ message: 'Cập nhật mật khẩu cho người dùng thành công' });
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });

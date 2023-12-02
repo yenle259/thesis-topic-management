@@ -4,7 +4,7 @@ var router = express.Router();
 const studentController = require('../app/controllers/StudentController');
 
 router.get('/module/:id', studentController.getRegisterModule);
-router.post('/account/import', studentController.importAccount);
+router.post('/account/import', studentController.importAccountWithoutHashPw);
 
 router.put('/update/:id', studentController.update);
 

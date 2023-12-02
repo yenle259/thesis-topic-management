@@ -149,6 +149,42 @@ class LecturerController {
         }
     }
 
+    // [POST] /lecturer/account/import -> import file account of lecturer without hash pass
+    async importAccountWithoutHashPw(req, res, next) {
+        try {
+            const data = req.body;
+            const accountData = data.map((lecturer) => {
+
+                return new Lecturer({
+                    userId: lecturer.userId,
+                    name: lecturer.name,
+                    password: lecturer.password,
+                    email: lecturer.email,
+                    role: lecturer.role ?? 'LECTURER'
+                })
+            }
+            )
+            const lecturers = await Lecturer.insertMany(accountData, { ordered: false })
+            res.status(200).json(lecturers);
+        } catch (err) {
+            console.log(err)
+            if (err.writeErrors) {
+                let errors = { userId: [] }
+                err.writeErrors.map((error) => {
+                    if (err.code === 11000) {
+                        errors.userId = 'Mã số cán bộ: ' + error.err.op.userId + ' đã tồn tại\n';
+                    }else{
+                        errors.error = 'Không thể thực hiện thoa tác';
+                    }
+                })
+                res.status(400).json({ errors });
+            } else {
+                const errors = handleErrors(err);
+                res.status(400).json({ errors });
+            }
+        }
+    }
+
 }
 
 module.exports = new LecturerController();
