@@ -165,7 +165,7 @@ class LecturerController {
             }
             )
             const lecturers = await Lecturer.insertMany(accountData, { ordered: false })
-            res.status(200).json(lecturers);
+            res.status(200).json({ created: lecturers.length, lecturers });
         } catch (err) {
             console.log(err)
             if (err.writeErrors) {
@@ -173,8 +173,8 @@ class LecturerController {
                 err.writeErrors.map((error) => {
                     if (err.code === 11000) {
                         errors.userId = 'Mã số cán bộ: ' + error.err.op.userId + ' đã tồn tại\n';
-                    }else{
-                        errors.error = 'Không thể thực hiện thoa tác';
+                    } else {
+                        errors.error = 'Không thực hiện được thao tác';
                     }
                 })
                 res.status(400).json({ errors });

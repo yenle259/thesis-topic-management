@@ -8,6 +8,7 @@ const Student = new Schema(
             type: String,
             unique: true,
             required: [true, 'Student ID is required'],
+            minLength: [8, 'Mã số sinh viên phải bao gồm 8 kí tự'],
             lowercase: true
         },
         name: { type: String, maxLength: 255 },

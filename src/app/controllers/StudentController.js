@@ -232,7 +232,7 @@ class StudentController {
             }
             )
             const students = await Student.insertMany(accountData, { ordered: false })
-            res.status(200).json(students);
+            res.status(200).json({ created: students.length, students });
         } catch (err) {
             console.log(err)
             if (err.writeErrors) {
@@ -240,7 +240,9 @@ class StudentController {
                 err.writeErrors.map((error) => {
                     if (err.code === 11000) {
                         // errors.userId.push('MSSV: ' + error.err.op.userId + ' đã tồn tại\n')
-                        errors.userId = 'MSSV: ' + error.err.op.userId + ' đã tồn tại\n';
+                        errors.userId = 'Mã số sinh viên: ' + error.err.op.userId + ' đã tồn tại\n';
+                    } else {
+                        errors.error = 'Không thực hiện được thao tác';
                     }
                 })
                 res.status(400).json({ errors });

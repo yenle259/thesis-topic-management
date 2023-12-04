@@ -42,23 +42,14 @@ class ModuleController {
             res.status(400).json({ errors });
         }
     }
-
-    // [GET] /report/student/:id --> get students + pagination
-    async getReportOfStudent(req, res, next) {
+    // [DELETE] /module/remove
+    async remove(req, res, next) {
         try {
-            const topics = await ReportTopic.find({ 'student': req.params.id }).populate('pi').populate('topic').populate({
-                path: 'topic',
-                populate: { path: 'semester' }
-            })
-                .sort({ createdAt: '-1' })
-            const total = await ReportTopic.find({ 'student': req.params.id }).countDocuments();
-
-            res.status(200).json({
-                topics,
-                total
-            });
+            const module = await Module.findOneAndRemove({ moduleId: req.params.id });
+            res.status(200).json({ message: `Đã xóa thành công ${req.params.id}` });
         } catch (err) {
-            console.error(err.message);
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 
