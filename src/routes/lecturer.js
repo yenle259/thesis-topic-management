@@ -10,6 +10,7 @@ router.post('/account', userController.createLecturer);
 
 router.get('/lecturers/:id', userController.getLecturersById);
 router.get('/lecturers', userController.getLecturers);
+router.delete('/:id', userController.deleteLecturer);
 router.get('/', userController.get);
 
 module.exports = router;

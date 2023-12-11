@@ -1,5 +1,6 @@
 const Lecturer = require('../models/Lecturer');
 const bcrypt = require('bcrypt');
+const Topic = require('../models/Topic');
 
 const handleErrors = (err) => {
     let errors = { userId: '', name: '', email: '', moduleType: '', password: '' };
@@ -182,6 +183,22 @@ class LecturerController {
                 const errors = handleErrors(err);
                 res.status(400).json({ errors });
             }
+        }
+    }
+
+    // [DELETE] /lecturer/:id --> delete lecturer by id
+    async deleteLecturer(req, res, next) {
+        try {
+            const topic = await Topic.findOne({ 'pi': req.params.id });
+            if (topic) {
+                res.status(400).json({ errors: { message: `Tồn tại đề tài được tạo bởi giảng viên, không thể xóa giảng viên` } });
+            } else {
+                const deleteLecturer = await Lecturer.findByIdAndRemove({ _id: req.params.id });
+                res.status(200).json({ statusCode: 200, message: `Đã xóa thành công tài khoản giảng viên` });
+            }
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
         }
     }
 
