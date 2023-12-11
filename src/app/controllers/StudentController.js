@@ -2,6 +2,7 @@ const constant = require('../../constants')
 const Student = require('../models/Student');
 const Module = require('../models/Module');
 const bcrypt = require('bcrypt');
+const Topic = require('../models/Topic');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -255,11 +256,19 @@ class StudentController {
 
     // [DELETE] /student/:id --> delete student by id
     async deleteStudent(req, res, next) {
-        Student.findByIdAndRemove({ _id: req.params.id })
-            .then((student) => {
-                res.status(200).json(student);
-            })
-            .catch(next);
+        const studentId = req.params.id;
+        try {
+            const topic = await Topic.findOne({ 'student.studentInfo': req.params.id });
+            if (topic) {
+                res.status(400).json({ errors: { message: `Tồn tại đề tài được đăng ký bởi sinh viên, không thể xóa sinh viên` } });
+            } else {
+                const deleteStudent = await Student.findByIdAndRemove({ _id: req.params.id });
+                res.status(200).json({ statusCode: 200, message: `Đã xóa thành công tài khoản sinh viên` });
+            }
+        } catch (err) {
+            const errors = handleErrors(err);
+            res.status(400).json({ errors });
+        }
     }
 }
 

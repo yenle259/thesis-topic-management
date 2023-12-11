@@ -1,4 +1,5 @@
 const Module = require('../models/Module');
+const Topic = require('../models/Topic');
 
 //handle error if failed, err.code sth is undefined
 const handleErrors = (err) => {
@@ -44,9 +45,19 @@ class ModuleController {
     }
     // [DELETE] /module/remove
     async remove(req, res, next) {
+        const moduleId = req.params.id;
         try {
-            const module = await Module.findOneAndRemove({ moduleId: req.params.id });
-            res.status(200).json({ message: `Đã xóa thành công ${req.params.id}` });
+            // const module = await Module.findOneAndRemove({ moduleId: req.params.id });
+            const module = await Module.findOne({ moduleId: req.params.id });
+
+            const topic = await Topic.findOne({ module: module._id })
+
+            if (topic) {
+                res.status(400).json({ errors: { message: `Tồn tại đề tài được tạo với mã học phần ${req.params.id}, không thể xóa học phần` } });
+            } else {
+                const deleteModule = await Module.findOneAndRemove({ moduleId: req.params.id });
+                res.status(200).json({ statusCode: 200, message: `Đã xóa thành công ${req.params.id}` });
+            }
         } catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
