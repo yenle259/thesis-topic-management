@@ -49,7 +49,8 @@ class ReportTopicController {
                     path: 'pi student topic'
                 })
                 .sort({
-                    createdAt: 'desc',
+                    pi: 'desc',
+                    updatedAt: 'desc',
                 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit)
